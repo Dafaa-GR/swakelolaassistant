@@ -334,24 +334,12 @@
 
       <div class="filterbar">
         <div>
-          <label>Status</label>
-          <select id="fStatus">
-            <option value="all">Semua Status</option>
-            <option value="selesai">Selesai</option>
-            <option value="on progress">On Progress</option>
-          </select>
-        </div>
-        <div>
           <label>Wilayah</label>
           <select id="fRegion"><option value="all">Semua Wilayah</option></select>
         </div>
         <div>
           <label>Penanggung Jawab</label>
           <select id="fPic"><option value="all">Semua PIC</option></select>
-        </div>
-        <div class="grow">
-          <label>Cari Proyek</label>
-          <input type="text" id="fSearch" placeholder="Ketik nama proyek...">
         </div>
         <button class="reset-btn" id="btnReset">Reset</button>
       </div>
@@ -701,15 +689,11 @@ async function boot(){
 }
 
 function getFiltered(){
-  const status = document.getElementById("fStatus").value;
   const region = document.getElementById("fRegion").value;
   const pic = document.getElementById("fPic").value;
-  const search = document.getElementById("fSearch").value.trim().toLowerCase();
   return PROJECTS.filter(p=>{
-    if(status!=="all" && p.stageNorm!==status) return false;
     if(region!=="all" && p.region!==region) return false;
     if(pic!=="all" && p.pic!==pic) return false;
-    if(search && !p.name.toLowerCase().includes(search)) return false;
     return true;
   });
 }
@@ -867,15 +851,13 @@ document.querySelectorAll("th[data-key]").forEach(th=>{
   });
 });
 
-["fStatus","fRegion","fPic","fSearch"].forEach(id=>{
+["fRegion","fPic"].forEach(id=>{
   document.getElementById(id).addEventListener("input", render);
   document.getElementById(id).addEventListener("change", render);
 });
 document.getElementById("btnReset").addEventListener("click", ()=>{
-  document.getElementById("fStatus").value="all";
   document.getElementById("fRegion").value="all";
   document.getElementById("fPic").value="all";
-  document.getElementById("fSearch").value="";
   render();
 });
 
