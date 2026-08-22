@@ -337,9 +337,8 @@
           <label>Status</label>
           <select id="fStatus">
             <option value="all">Semua Status</option>
-            <option value="ontrack">On Track</option>
-            <option value="warning">Perlu Perhatian</option>
-            <option value="late">Berpotensi Terlambat</option>
+            <option value="selesai">Selesai</option>
+            <option value="on progress">On Progress</option>
           </select>
         </div>
         <div>
@@ -349,10 +348,6 @@
         <div>
           <label>Penanggung Jawab</label>
           <select id="fPic"><option value="all">Semua PIC</option></select>
-        </div>
-        <div>
-          <label>Tahap Proyek</label>
-          <select id="fStage"><option value="all">Semua Tahap</option></select>
         </div>
         <div class="grow">
           <label>Cari Proyek</label>
@@ -601,7 +596,7 @@
    3. Salin link CSV yang muncul, tempel di SHEET_CSV_URL di bawah ini
    Jika dikosongkan, dashboard otomatis memakai DEMO_PROJECTS di bawah.
 ===================================================================== */
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9mAuPr0hWTRnspZRKdmDlDS6BtiJ8BBrrq4Ay1mEjbYc2Qfze76VpXKSEs3gz3yw9ZYkY71/pub?gid=0&single=true&output=csv"; // <-- taruh link "Publish to web" (CSV) dari Google Sheets Anda di sini
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9mAuPr0hWTRnspZRKdmDlDS6BtiJ8BBrrq4Ay1mEjbYc2Qfze76VpXKSEs3gz3yw9ZYkY71/pub?gid=0&single=true&output=csv";
 
 const DEMO_PROJECTS = [
   {name:"Gedung Perkantoran Menara A", region:"Jakarta", pic:"Rudi Santoso", planned:80, actual:74, deadline:"2026-10-15", stage:"On Progress"},
@@ -643,7 +638,7 @@ function deriveFields(list){
     // "stage" = tahapan proyek dari kolom sheet "Status" (On Progress / Selesai / Belum Mulai / dll)
     // Ini BEDA dari p.status di atas (yang merupakan status risiko hasil hitungan otomatis).
     p.stage = (p.stage || "").toString().trim();
-    if(!p.stage) p.stage = "On Progress"; // default kalau kolom Status kosong di sheet
+    if(!p.stage) p.stage = "Tanpa Status"; // kolom Status kosong/tidak terbaca di sheet -> JANGAN dianggap "On Progress"
     p.stageNorm = p.stage.toLowerCase();
   });
   return list;
@@ -661,8 +656,8 @@ async function loadData(){
     const text = await res.text();
     const parsed = Papa.parse(text, {header:true, skipEmptyLines:true});
     const mapped = parsed.data.map(row=>({
-      name: (row.name || row.Nama || "").toString().trim(),
-      region: (row.region || row.Wilayah || "").toString().trim(),
+      name: (row.name || row.Name || row.Nama || "").toString().trim(),
+      region: (row.region || row.Region || row.Wilayah || "").toString().trim(),
       pic: (row.pic || row.PIC || "").toString().trim(),
       planned: Number(row.planned || row["Target %"] || row.Target || 0),
       actual: Number(row.actual || row["Realisasi %"] || row.Realisasi || 0),
@@ -687,20 +682,15 @@ function setSyncInfo(text){
 function populateFilters(){
   const regions = [...new Set(PROJECTS.map(p=>p.region))].filter(Boolean).sort();
   const pics = [...new Set(PROJECTS.map(p=>p.pic))].filter(Boolean).sort();
-  const stages = [...new Set(PROJECTS.map(p=>p.stage))].filter(Boolean).sort();
   const fRegion = document.getElementById("fRegion");
   const fPic = document.getElementById("fPic");
-  const fStage = document.getElementById("fStage");
-  const curRegion = fRegion.value, curPic = fPic.value, curStage = fStage.value;
+  const curRegion = fRegion.value, curPic = fPic.value;
   fRegion.innerHTML = '<option value="all">Semua Wilayah</option>';
   regions.forEach(r=>{ const o=document.createElement("option"); o.value=r; o.textContent=r; fRegion.appendChild(o); });
   fPic.innerHTML = '<option value="all">Semua PIC</option>';
   pics.forEach(p=>{ const o=document.createElement("option"); o.value=p; o.textContent=p; fPic.appendChild(o); });
-  fStage.innerHTML = '<option value="all">Semua Tahap</option>';
-  stages.forEach(s=>{ const o=document.createElement("option"); o.value=s; o.textContent=s; fStage.appendChild(o); });
   if(regions.includes(curRegion)) fRegion.value = curRegion;
   if(pics.includes(curPic)) fPic.value = curPic;
-  if(stages.includes(curStage)) fStage.value = curStage;
 }
 
 async function boot(){
@@ -714,13 +704,11 @@ function getFiltered(){
   const status = document.getElementById("fStatus").value;
   const region = document.getElementById("fRegion").value;
   const pic = document.getElementById("fPic").value;
-  const stage = document.getElementById("fStage").value;
   const search = document.getElementById("fSearch").value.trim().toLowerCase();
   return PROJECTS.filter(p=>{
-    if(status!=="all" && p.status!==status) return false;
+    if(status!=="all" && p.stageNorm!==status) return false;
     if(region!=="all" && p.region!==region) return false;
     if(pic!=="all" && p.pic!==pic) return false;
-    if(stage!=="all" && p.stage!==stage) return false;
     if(search && !p.name.toLowerCase().includes(search)) return false;
     return true;
   });
@@ -879,7 +867,7 @@ document.querySelectorAll("th[data-key]").forEach(th=>{
   });
 });
 
-["fStatus","fRegion","fPic","fStage","fSearch"].forEach(id=>{
+["fStatus","fRegion","fPic","fSearch"].forEach(id=>{
   document.getElementById(id).addEventListener("input", render);
   document.getElementById(id).addEventListener("change", render);
 });
@@ -887,7 +875,6 @@ document.getElementById("btnReset").addEventListener("click", ()=>{
   document.getElementById("fStatus").value="all";
   document.getElementById("fRegion").value="all";
   document.getElementById("fPic").value="all";
-  document.getElementById("fStage").value="all";
   document.getElementById("fSearch").value="";
   render();
 });
