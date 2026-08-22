@@ -84,7 +84,7 @@
   .sb-link svg{width:17px;height:17px;flex-shrink:0;stroke:var(--text-dim);}
   .sb-link:hover{background:var(--panel-2);}
   .sb-link.active{background:var(--blue-bg); color:var(--blue); border-left-color:var(--blue);}
-  .sb-link.active svg{stroke:var(--blue);}csv
+  .sb-link.active svg{stroke:var(--blue);}
 
   .sb-foot{
     padding:14px 16px; border-top:1px solid var(--line);
@@ -350,6 +350,10 @@
           <label>Penanggung Jawab</label>
           <select id="fPic"><option value="all">Semua PIC</option></select>
         </div>
+        <div>
+          <label>Tahap Proyek</label>
+          <select id="fStage"><option value="all">Semua Tahap</option></select>
+        </div>
         <div class="grow">
           <label>Cari Proyek</label>
           <input type="text" id="fSearch" placeholder="Ketik nama proyek...">
@@ -371,7 +375,7 @@
           <div class="kpi-body">
             <div class="k-label">Total Progress</div>
             <div class="k-value" id="kpiProgress">0</div>
-            <div class="k-foot" id="kpiProgressFoot">unit/blok belum selesai dibangun</div>
+            <div class="k-foot" id="kpiProgressFoot">proyek berstatus On Progress</div>
           </div>
         </div>
         <div class="kpi">
@@ -445,6 +449,7 @@
                 <th data-key="deviation">Deviasi <span class="arrow">↕</span></th>
                 <th data-key="deadline">Deadline <span class="arrow">↕</span></th>
                 <th data-key="status">Status <span class="arrow">↕</span></th>
+                <th data-key="stage">Tahap <span class="arrow">↕</span></th>
               </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -589,7 +594,9 @@
 <script>
 /* =====================================================================
    KONEKSI KE GOOGLE SHEETS
-   1. Buat Google Sheet dengan kolom header persis: name, region, pic, planned, actual, deadline
+   1. Buat Google Sheet dengan kolom header persis: name, region, pic, planned, actual, deadline, status
+      - Kolom "status" diisi tahap proyek, misal: On Progress / Selesai / Belum Mulai
+        (dipakai untuk KPI "Total Progress" & filter "Tahap Proyek")
    2. File > Share > Publish to web > pilih sheet-nya > format CSV > Publish
    3. Salin link CSV yang muncul, tempel di SHEET_CSV_URL di bawah ini
    Jika dikosongkan, dashboard otomatis memakai DEMO_PROJECTS di bawah.
@@ -597,18 +604,18 @@
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9mAuPr0hWTRnspZRKdmDlDS6BtiJ8BBrrq4Ay1mEjbYc2Qfze76VpXKSEs3gz3yw9ZYkY71/pub?gid=0&single=true&output=csv"; // <-- taruh link "Publish to web" (CSV) dari Google Sheets Anda di sini
 
 const DEMO_PROJECTS = [
-  {name:"Gedung Perkantoran Menara A", region:"Jakarta", pic:"Rudi Santoso", planned:80, actual:74, deadline:"2026-10-15"},
-  {name:"Perumahan Griya Asri Blok C", region:"Bekasi", pic:"Siti Aminah", planned:65, actual:66, deadline:"2026-11-02"},
-  {name:"Rusun Pekerja Cikarang", region:"Bekasi", pic:"Bambang Wijaya", planned:50, actual:34, deadline:"2026-09-20"},
-  {name:"Pabrik Manufaktur Blok D", region:"Karawang", pic:"Rudi Santoso", planned:90, actual:91, deadline:"2026-09-05"},
-  {name:"Gudang Logistik Terpadu", region:"Cikampek", pic:"Dewi Lestari", planned:40, actual:28, deadline:"2026-12-10"},
-  {name:"Mall Sentosa Extension", region:"Jakarta", pic:"Dewi Lestari", planned:70, actual:69, deadline:"2026-10-30"},
-  {name:"Apartemen Green Tower B", region:"Bandung", pic:"Bambang Wijaya", planned:55, actual:41, deadline:"2026-09-25"},
-  {name:"Rumah Sakit Cabang Timur", region:"Bandung", pic:"Siti Aminah", planned:30, actual:29, deadline:"2027-01-15"},
-  {name:"Sekolah Terpadu Wilayah 2", region:"Bogor", pic:"Rudi Santoso", planned:85, actual:79, deadline:"2026-09-18"},
-  {name:"Jembatan Penghubung Cikarang", region:"Bekasi", pic:"Dewi Lestari", planned:45, actual:22, deadline:"2026-09-10"},
-  {name:"Kantor Cabang Bogor", region:"Bogor", pic:"Bambang Wijaya", planned:95, actual:96, deadline:"2026-08-30"},
-  {name:"Terminal Distribusi Barat", region:"Karawang", pic:"Siti Aminah", planned:60, actual:52, deadline:"2026-11-20"},
+  {name:"Gedung Perkantoran Menara A", region:"Jakarta", pic:"Rudi Santoso", planned:80, actual:74, deadline:"2026-10-15", stage:"On Progress"},
+  {name:"Perumahan Griya Asri Blok C", region:"Bekasi", pic:"Siti Aminah", planned:65, actual:66, deadline:"2026-11-02", stage:"On Progress"},
+  {name:"Rusun Pekerja Cikarang", region:"Bekasi", pic:"Bambang Wijaya", planned:50, actual:34, deadline:"2026-09-20", stage:"On Progress"},
+  {name:"Pabrik Manufaktur Blok D", region:"Karawang", pic:"Rudi Santoso", planned:90, actual:91, deadline:"2026-09-05", stage:"On Progress"},
+  {name:"Gudang Logistik Terpadu", region:"Cikampek", pic:"Dewi Lestari", planned:40, actual:28, deadline:"2026-12-10", stage:"Belum Mulai"},
+  {name:"Mall Sentosa Extension", region:"Jakarta", pic:"Dewi Lestari", planned:70, actual:69, deadline:"2026-10-30", stage:"On Progress"},
+  {name:"Apartemen Green Tower B", region:"Bandung", pic:"Bambang Wijaya", planned:55, actual:41, deadline:"2026-09-25", stage:"On Progress"},
+  {name:"Rumah Sakit Cabang Timur", region:"Bandung", pic:"Siti Aminah", planned:30, actual:29, deadline:"2027-01-15", stage:"Belum Mulai"},
+  {name:"Sekolah Terpadu Wilayah 2", region:"Bogor", pic:"Rudi Santoso", planned:85, actual:79, deadline:"2026-09-18", stage:"On Progress"},
+  {name:"Jembatan Penghubung Cikarang", region:"Bekasi", pic:"Dewi Lestari", planned:45, actual:22, deadline:"2026-09-10", stage:"On Progress"},
+  {name:"Kantor Cabang Bogor", region:"Bogor", pic:"Bambang Wijaya", planned:95, actual:96, deadline:"2026-08-30", stage:"Selesai"},
+  {name:"Terminal Distribusi Barat", region:"Karawang", pic:"Siti Aminah", planned:60, actual:52, deadline:"2026-11-20", stage:"On Progress"},
 ];
 
 const statusLabel = {ontrack:"On Track", warning:"Perlu Perhatian", late:"Berpotensi Terlambat"};
@@ -633,6 +640,11 @@ function deriveFields(list){
     } else {
       p.status = "ontrack";
     }
+    // "stage" = tahapan proyek dari kolom sheet "Status" (On Progress / Selesai / Belum Mulai / dll)
+    // Ini BEDA dari p.status di atas (yang merupakan status risiko hasil hitungan otomatis).
+    p.stage = (p.stage || "").toString().trim();
+    if(!p.stage) p.stage = "On Progress"; // default kalau kolom Status kosong di sheet
+    p.stageNorm = p.stage.toLowerCase();
   });
   return list;
 }
@@ -655,6 +667,7 @@ async function loadData(){
       planned: Number(row.planned || row["Target %"] || row.Target || 0),
       actual: Number(row.actual || row["Realisasi %"] || row.Realisasi || 0),
       deadline: (row.deadline || row.Deadline || "").toString().trim(),
+      stage: (row.stage || row.Stage || row.status || row.Status || "").toString().trim(),
     })).filter(p=>p.name);
     if(!mapped.length) throw new Error("Sheet kosong atau kolom tidak sesuai");
     setSyncInfo("Terhubung ke Google Sheets · " + new Date().toLocaleTimeString("id-ID"));
@@ -674,15 +687,20 @@ function setSyncInfo(text){
 function populateFilters(){
   const regions = [...new Set(PROJECTS.map(p=>p.region))].filter(Boolean).sort();
   const pics = [...new Set(PROJECTS.map(p=>p.pic))].filter(Boolean).sort();
+  const stages = [...new Set(PROJECTS.map(p=>p.stage))].filter(Boolean).sort();
   const fRegion = document.getElementById("fRegion");
   const fPic = document.getElementById("fPic");
-  const curRegion = fRegion.value, curPic = fPic.value;
+  const fStage = document.getElementById("fStage");
+  const curRegion = fRegion.value, curPic = fPic.value, curStage = fStage.value;
   fRegion.innerHTML = '<option value="all">Semua Wilayah</option>';
   regions.forEach(r=>{ const o=document.createElement("option"); o.value=r; o.textContent=r; fRegion.appendChild(o); });
   fPic.innerHTML = '<option value="all">Semua PIC</option>';
   pics.forEach(p=>{ const o=document.createElement("option"); o.value=p; o.textContent=p; fPic.appendChild(o); });
+  fStage.innerHTML = '<option value="all">Semua Tahap</option>';
+  stages.forEach(s=>{ const o=document.createElement("option"); o.value=s; o.textContent=s; fStage.appendChild(o); });
   if(regions.includes(curRegion)) fRegion.value = curRegion;
   if(pics.includes(curPic)) fPic.value = curPic;
+  if(stages.includes(curStage)) fStage.value = curStage;
 }
 
 async function boot(){
@@ -696,11 +714,13 @@ function getFiltered(){
   const status = document.getElementById("fStatus").value;
   const region = document.getElementById("fRegion").value;
   const pic = document.getElementById("fPic").value;
+  const stage = document.getElementById("fStage").value;
   const search = document.getElementById("fSearch").value.trim().toLowerCase();
   return PROJECTS.filter(p=>{
     if(status!=="all" && p.status!==status) return false;
     if(region!=="all" && p.region!==region) return false;
     if(pic!=="all" && p.pic!==pic) return false;
+    if(stage!=="all" && p.stage!==stage) return false;
     if(search && !p.name.toLowerCase().includes(search)) return false;
     return true;
   });
@@ -714,11 +734,12 @@ function formatDate(d){
 function render(){
   const data = getFiltered();
 
-  const totalBangun = data.length;
+  const totalBangun = data.length; // COUNTA: jumlah baris proyek (bernama) yang lolos filter aktif
   const avgDeviasi = data.length ? data.reduce((s,p)=>s+p.deviation,0)/data.length : 0;
   const totalLate = data.filter(p=>p.status==="late").length;
   const lateRatio = totalBangun ? (totalLate/totalBangun)*100 : 0;
-  const totalOngoing = data.filter(p=>p.actual < 100).length;
+  // Total Progress = COUNTIF kolom "Status" di sheet yang bernilai "On Progress" (tidak peka huruf besar/kecil)
+  const totalOngoing = data.filter(p=>p.stageNorm === "on progress").length;
   const ongoingRatio = totalBangun ? (totalOngoing/totalBangun)*100 : 0;
 
   document.getElementById("kpiTotalBangun").textContent = totalBangun;
@@ -726,7 +747,7 @@ function render(){
   document.getElementById("dialTotalBangun").textContent = totalBangun;
 
   document.getElementById("kpiProgress").textContent = totalOngoing;
-  document.getElementById("kpiProgressFoot").textContent = totalBangun ? `dari ${totalBangun} unit/blok dipantau` : "tidak ada data";
+  document.getElementById("kpiProgressFoot").textContent = totalBangun ? Math.round(ongoingRatio)+"% berstatus On Progress" : "tidak ada data";
   document.getElementById("dialProgress").textContent = totalOngoing;
   document.getElementById("dialProgressWrap").style.setProperty("--pct", ongoingRatio);
 
@@ -771,6 +792,7 @@ function render(){
       <td class="${p.deviation<0?'dev-pos':(p.deviation>0?'dev-neg':'dev-zero')}">${p.deviation>0?'+':''}${p.deviation}%</td>
       <td>${formatDate(p.deadline)}</td>
       <td><span class="status-pill status-${p.status}"><span class="dot"></span>${statusLabel[p.status]}</span></td>
+      <td>${p.stage}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -857,7 +879,7 @@ document.querySelectorAll("th[data-key]").forEach(th=>{
   });
 });
 
-["fStatus","fRegion","fPic","fSearch"].forEach(id=>{
+["fStatus","fRegion","fPic","fStage","fSearch"].forEach(id=>{
   document.getElementById(id).addEventListener("input", render);
   document.getElementById(id).addEventListener("change", render);
 });
@@ -865,6 +887,7 @@ document.getElementById("btnReset").addEventListener("click", ()=>{
   document.getElementById("fStatus").value="all";
   document.getElementById("fRegion").value="all";
   document.getElementById("fPic").value="all";
+  document.getElementById("fStage").value="all";
   document.getElementById("fSearch").value="";
   render();
 });
