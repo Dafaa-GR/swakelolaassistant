@@ -367,11 +367,11 @@
           </div>
         </div>
         <div class="kpi">
-          <div class="dial" style="--accent:#1f9d63; --pct:0;" id="dialProgressWrap"><span class="dial-txt" id="dialProgress">0%</span></div>
+          <div class="dial" style="--accent:#1f9d63; --pct:0;" id="dialProgressWrap"><span class="dial-txt" id="dialProgress">0</span></div>
           <div class="kpi-body">
             <div class="k-label">Total Progress</div>
-            <div class="k-value" id="kpiProgress">0%</div>
-            <div class="k-foot" id="kpiProgressFoot">rata-rata realisasi</div>
+            <div class="k-value" id="kpiProgress">0</div>
+            <div class="k-foot" id="kpiProgressFoot">unit/blok belum selesai dibangun</div>
           </div>
         </div>
         <div class="kpi">
@@ -715,18 +715,20 @@ function render(){
   const data = getFiltered();
 
   const totalBangun = data.length;
-  const avgProgress = data.length ? data.reduce((s,p)=>s+p.actual,0)/data.length : 0;
   const avgDeviasi = data.length ? data.reduce((s,p)=>s+p.deviation,0)/data.length : 0;
   const totalLate = data.filter(p=>p.status==="late").length;
   const lateRatio = totalBangun ? (totalLate/totalBangun)*100 : 0;
+  const totalOngoing = data.filter(p=>p.actual < 100).length;
+  const ongoingRatio = totalBangun ? (totalOngoing/totalBangun)*100 : 0;
 
   document.getElementById("kpiTotalBangun").textContent = totalBangun;
   document.getElementById("kpiTotalBangunFoot").textContent = totalBangun===PROJECTS.length ? "seluruh proyek berjalan" : `dari ${PROJECTS.length} total proyek`;
   document.getElementById("dialTotalBangun").textContent = totalBangun;
 
-  document.getElementById("kpiProgress").textContent = avgProgress.toFixed(1)+"%";
-  document.getElementById("dialProgress").textContent = Math.round(avgProgress)+"%";
-  document.getElementById("dialProgressWrap").style.setProperty("--pct", Math.min(avgProgress,100));
+  document.getElementById("kpiProgress").textContent = totalOngoing;
+  document.getElementById("kpiProgressFoot").textContent = totalBangun ? `dari ${totalBangun} unit/blok dipantau` : "tidak ada data";
+  document.getElementById("dialProgress").textContent = totalOngoing;
+  document.getElementById("dialProgressWrap").style.setProperty("--pct", ongoingRatio);
 
   document.getElementById("kpiDeviasi").textContent = (avgDeviasi>0?"+":"")+avgDeviasi.toFixed(1)+"%";
   document.getElementById("kpiDeviasi").style.color = avgDeviasi < -0.5 ? "var(--red)" : (avgDeviasi > 0.5 ? "var(--green)" : "var(--text)");
