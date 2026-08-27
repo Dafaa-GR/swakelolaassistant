@@ -659,10 +659,14 @@
       - Kolom "actual prog." diisi (apa saja, tidak kosong) untuk menandai proyek
         yang SEDANG On Progress dan berpotensi telat. Dipakai untuk KPI
         "Potential Late" — COUNTIF: baris dengan stage = On Progress DAN kolom
-        ini tidak kosong.
+        ini tidak kosong. CATATAN: nilai teks "Tidak Ada" (atau "-", "N/A", "Kosong")
+        dianggap SAMA DENGAN KOSONG, jadi baris tsb TIDAK ikut dihitung.
       - Kolom "ontime" diisi (apa saja, tidak kosong) untuk menandai proyek yang
         SEDANG On Progress dan berjalan tepat waktu. Dipakai untuk KPI "On Track"
         — COUNTIF: baris dengan stage = On Progress DAN kolom ini tidak kosong.
+        CATATAN: nilai teks "Tidak Ada" (atau "-", "N/A", "Kosong") dianggap
+        SAMA DENGAN KOSONG, jadi baris tsb TIDAK ikut dihitung. Daftar teks yang
+        dikecualikan bisa disesuaikan di variabel EMPTY_FLAG_VALUES pada kode.
    2. File > Share > Publish to web > pilih sheet-nya > format CSV > Publish
    3. Salin link CSV yang muncul, tempel di SHEET_CSV_URL di bawah ini
    Jika dikosongkan, dashboard otomatis memakai DEMO_PROJECTS di bawah.
@@ -694,7 +698,7 @@ const DEMO_PROJECTS = [
   {name:"Mall Sentosa Extension", region:"Jakarta", pic:"Dewi Lestari", planned:70, actual:69, deadline:"2026-10-30", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
   {name:"Apartemen Green Tower B", region:"Bandung", pic:"Bambang Wijaya", planned:55, actual:41, deadline:"2026-09-25", stage:"On Progress", statusBank:"Proses", actualProg:"Berpotensi Telat", ontime:""},
   {name:"Rumah Sakit Cabang Timur", region:"Bandung", pic:"Siti Aminah", planned:30, actual:29, deadline:"2027-01-15", stage:"Belum Mulai", statusBank:"", actualProg:"", ontime:""},
-  {name:"Sekolah Terpadu Wilayah 2", region:"Bogor", pic:"Rudi Santoso", planned:85, actual:79, deadline:"2026-09-18", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
+  {name:"Sekolah Terpadu Wilayah 2", region:"Bogor", pic:"Rudi Santoso", planned:85, actual:79, deadline:"2026-09-18", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Tidak Ada"},
   {name:"Jembatan Penghubung Cikarang", region:"Bekasi", pic:"Dewi Lestari", planned:45, actual:22, deadline:"2026-09-10", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:""},
   {name:"Kantor Cabang Bogor", region:"Bogor", pic:"Bambang Wijaya", planned:95, actual:96, deadline:"2026-08-30", stage:"Selesai", statusBank:"Approved", actualProg:"", ontime:""},
   {name:"Terminal Distribusi Barat", region:"Karawang", pic:"Siti Aminah", planned:60, actual:52, deadline:"2026-11-20", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:""},
@@ -731,6 +735,16 @@ let sortKey = "deviation";
 let sortDir = 1;
 let charts = {};
 
+// Nilai teks yang dianggap SAMA DENGAN KOSONG pada kolom penanda "actual prog." & "ontime".
+// Jika sel di CSV berisi salah satu teks ini (tidak peka huruf besar/kecil & spasi),
+// baris tsb TIDAK ikut dihitung di scorecard "Potential Late" / "On Track".
+const EMPTY_FLAG_VALUES = ["tidak ada", "-", "n/a", "na", "kosong"];
+function normalizeFlag(val){
+  const v = (val || "").toString().trim();
+  if(EMPTY_FLAG_VALUES.includes(v.toLowerCase())) return "";
+  return v;
+}
+
 function deriveFields(list){
   list.forEach(p=>{
     p.planned = Number(p.planned) || 0;
@@ -755,10 +769,12 @@ function deriveFields(list){
     p.statusBank = (p.statusBank || "").toString().trim();
     // "actualProg" = kolom "actual prog." di CSV PROYEK.
     // Tidak kosong = proyek (yang sedang On Progress) berpotensi telat -> KPI "Potential Late".
-    p.actualProg = (p.actualProg || "").toString().trim();
+    // Nilai seperti "Tidak Ada" dianggap SAMA DENGAN KOSONG (lihat normalizeFlag/EMPTY_FLAG_VALUES) -> TIDAK dihitung.
+    p.actualProg = normalizeFlag(p.actualProg);
     // "ontime" = kolom "ontime" di CSV PROYEK.
     // Tidak kosong = proyek (yang sedang On Progress) berjalan tepat waktu -> KPI "On Track".
-    p.ontime = (p.ontime || "").toString().trim();
+    // Nilai seperti "Tidak Ada" dianggap SAMA DENGAN KOSONG (lihat normalizeFlag/EMPTY_FLAG_VALUES) -> TIDAK dihitung.
+    p.ontime = normalizeFlag(p.ontime);
   });
   return list;
 }
