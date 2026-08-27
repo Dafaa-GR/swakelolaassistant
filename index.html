@@ -724,6 +724,7 @@ const DEMO_STATUS_BANK = [
   {region:"Bandung", totalSP3K:0, totalReadyStock:1},
   {region:"Bekasi", totalSP3K:0, totalReadyStock:1},
   {region:"Karawang", totalSP3K:0, totalReadyStock:1},
+  {region:"RN Kayangan", totalSP3K:1, totalReadyStock:1},
 ];
 
 const statusLabel = {ontrack:"On Track", warning:"Perlu Perhatian", late:"Berpotensi Terlambat"};
@@ -839,8 +840,23 @@ function setSyncInfo(text){
   if(el) el.textContent = text;
 }
 
+function normRegion(s){ return (s || "").toString().trim().toLowerCase(); }
+
 function populateFilters(){
-  const regions = [...new Set(PROJECTS.map(p=>p.region))].filter(Boolean).sort();
+  // Satukan daftar Wilayah dari KEDUA sumber: CSV proyek DAN CSV status bank.
+  // Ini penting supaya wilayah yang hanya muncul di salah satu sumber (mis. wilayah
+  // "RN Kayangan" yang ada di CSV status bank tapi belum punya baris proyek di CSV
+  // proyek, atau sebaliknya) tetap MUNCUL di filter & tetap terbaca datanya.
+  const regionMap = new Map(); // key: region ternormalisasi (trim+lowercase) -> value: teks tampilan asli
+  PROJECTS.forEach(p=>{
+    const r = (p.region || "").toString().trim();
+    if(r && !regionMap.has(normRegion(r))) regionMap.set(normRegion(r), r);
+  });
+  STATUS_BANK.forEach(r=>{
+    const rg = (r.region || "").toString().trim();
+    if(rg && !regionMap.has(normRegion(rg))) regionMap.set(normRegion(rg), rg);
+  });
+  const regions = [...regionMap.values()].sort();
   const pics = [...new Set(PROJECTS.map(p=>p.pic))].filter(Boolean).sort();
   const fRegion = document.getElementById("fRegion");
   const fPic = document.getElementById("fPic");
@@ -849,7 +865,7 @@ function populateFilters(){
   regions.forEach(r=>{ const o=document.createElement("option"); o.value=r; o.textContent=r; fRegion.appendChild(o); });
   fPic.innerHTML = '<option value="all">Semua PIC</option>';
   pics.forEach(p=>{ const o=document.createElement("option"); o.value=p; o.textContent=p; fPic.appendChild(o); });
-  if(regions.includes(curRegion)) fRegion.value = curRegion;
+  if(regions.some(r=>normRegion(r)===normRegion(curRegion))) fRegion.value = curRegion;
   if(pics.includes(curPic)) fPic.value = curPic;
 }
 
@@ -865,7 +881,7 @@ function getFiltered(){
   const region = document.getElementById("fRegion").value;
   const pic = document.getElementById("fPic").value;
   return PROJECTS.filter(p=>{
-    if(region!=="all" && p.region!==region) return false;
+    if(region!=="all" && normRegion(p.region)!==normRegion(region)) return false;
     if(pic!=="all" && p.pic!==pic) return false;
     return true;
   });
@@ -911,10 +927,13 @@ function renderScorecardBangun(data){
 
   // Samakan filter Wilayah dengan CSV status bank: hanya jumlahkan baris
   // status bank yang region-nya cocok dengan wilayah terpilih di CSV proyek.
+  // Pencocokan region dibuat case-insensitive & trim-safe (normRegion) supaya
+  // wilayah seperti "RN Kayangan" tetap terbaca walau penulisannya sedikit
+  // berbeda antara CSV proyek dan CSV status bank (spasi ekstra/huruf besar-kecil).
   const selectedRegion = document.getElementById("fRegion").value;
   const filteredStatusBank = selectedRegion === "all"
     ? STATUS_BANK
-    : STATUS_BANK.filter(r => r.region === selectedRegion);
+    : STATUS_BANK.filter(r => normRegion(r.region) === normRegion(selectedRegion));
 
   // Kolom "Total SP3K" dan "Total Ready Stock" SAMA-SAMA sudah berisi angka jadi
   // per baris -> keduanya tinggal DIJUMLAHKAN (SUM), bukan di-COUNTIF.
