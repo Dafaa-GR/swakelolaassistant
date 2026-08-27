@@ -864,33 +864,46 @@ function formatDate(d){
    SCORECARD TOTAL BANGUN — logika perhitungan
    1. Total Bangun          = jumlah baris proyek yang lolos filter (COUNTA)
    2. Total SP3K Muncul     = SUM angka pada kolom "Total SP3K" di sumber
-                              "status bank" (CSV terpisah). Kolom ini sudah
-                              berisi angka total jadi/siap per baris, jadi
-                              tinggal DIJUMLAHKAN — bukan di-COUNTIF.
+                              "status bank" (CSV terpisah), HANYA untuk baris
+                              yang kolom "region"-nya SAMA dengan wilayah yang
+                              sedang dipilih di filter "Wilayah" (fRegion) —
+                              filter ini disamakan dengan filter di CSV proyek.
+                              Jika filter Wilayah = "Semua Wilayah", seluruh
+                              baris status bank ikut dijumlahkan. Kolom ini
+                              sudah berisi angka total jadi/siap per baris,
+                              jadi tinggal DIJUMLAHKAN — bukan di-COUNTIF.
    3. % di sebelah SP3K Muncul
-                            = (jumlah baris proyek yang kolom status_bank TIDAK KOSONG)
-                              / Total SP3K Muncul (poin 2)
+                            = (jumlah baris proyek yang kolom status_bank TIDAK KOSONG,
+                              pada wilayah yang sama) / Total SP3K Muncul (poin 2)
    4. Total Ready Stock Muncul
                             = SUM angka pada kolom "Total Ready Stock" di sumber
-                              "status bank". Kolom ini juga SUDAH berisi angka
-                              total jadi/siap per baris, jadi tinggal DIJUMLAHKAN
-                              — independen dari kolom Total SP3K.
+                              "status bank", DENGAN filter wilayah yang sama seperti
+                              poin 2. Kolom ini juga SUDAH berisi angka total jadi/siap
+                              per baris, jadi tinggal DIJUMLAHKAN — independen dari
+                              kolom Total SP3K.
    5. % di sebelah Ready Stock Muncul
-                            = (jumlah baris proyek yang kolom status_bank KOSONG)
-                              / Total Ready Stock Muncul (poin 4)
+                            = (jumlah baris proyek yang kolom status_bank KOSONG,
+                              pada wilayah yang sama) / Total Ready Stock Muncul (poin 4)
    6. Angka & % di bawah "170 unit" (breakdown SP3K / Ready Stock)
                             = jumlah baris proyek per kategori status_bank, dibagi
-                              Total Bangun (total region/unit yang ada)
+                              Total Bangun (total region/unit yang ada, sudah lolos filter)
 ===================================================================== */
 function renderScorecardBangun(data){
   const totalBangun = data.length;
   const projSp3kCount = data.filter(p=>p.statusBank !== "").length;
   const projReadyCount = data.filter(p=>p.statusBank === "").length;
 
+  // Samakan filter Wilayah dengan CSV status bank: hanya jumlahkan baris
+  // status bank yang region-nya cocok dengan wilayah terpilih di CSV proyek.
+  const selectedRegion = document.getElementById("fRegion").value;
+  const filteredStatusBank = selectedRegion === "all"
+    ? STATUS_BANK
+    : STATUS_BANK.filter(r => r.region === selectedRegion);
+
   // Kolom "Total SP3K" dan "Total Ready Stock" SAMA-SAMA sudah berisi angka jadi
   // per baris -> keduanya tinggal DIJUMLAHKAN (SUM), bukan di-COUNTIF.
-  const bankSp3kMuncul = STATUS_BANK.reduce((sum,r)=> sum + (Number(r.totalSP3K) || 0), 0);
-  const bankReadyMuncul = STATUS_BANK.reduce((sum,r)=> sum + (Number(r.totalReadyStock) || 0), 0);
+  const bankSp3kMuncul = filteredStatusBank.reduce((sum,r)=> sum + (Number(r.totalSP3K) || 0), 0);
+  const bankReadyMuncul = filteredStatusBank.reduce((sum,r)=> sum + (Number(r.totalReadyStock) || 0), 0);
 
   const pctSp3kMuncul = bankSp3kMuncul ? (projSp3kCount / bankSp3kMuncul) * 100 : 0;
   const pctReadyMuncul = bankReadyMuncul ? (projReadyCount / bankReadyMuncul) * 100 : 0;
