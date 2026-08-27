@@ -425,7 +425,7 @@
 
       <div class="kpi-grid" id="kpi">
         <div class="kpi">
-          <div class="dial" style="--accent:#1f9d63; --pct:0;" id="dialProgressWrap"><span class="dial-txt" id="dialProgress">0</span></div>
+          <div class="dial" style="--accent:#FFCC4D; --pct:0;" id="dialProgressWrap"><span class="dial-txt" id="dialProgress">⏳</span></div>
           <div class="kpi-body">
             <div class="k-label">Total Progress</div>
             <div class="k-value" id="kpiProgress">0</div>
@@ -433,11 +433,11 @@
           </div>
         </div>
         <div class="kpi">
-          <div class="dial" style="--accent:#d98e21; --pct:0;" id="dialDeviasiWrap"><span class="dial-txt" id="dialDeviasi">0%</span></div>
+          <div class="dial" style="--accent:#7EC151; --pct:0;" id="dialOnTrackWrap"><span class="dial-txt" id="dialOnTrack">0</span></div>
           <div class="kpi-body">
-            <div class="k-label">Total Deviasi</div>
-            <div class="k-value" id="kpiDeviasi">0%</div>
-            <div class="k-foot" id="kpiDeviasiFoot">rata-rata vs rencana</div>
+            <div class="k-label">On Track</div>
+            <div class="k-value" id="kpiOnTrack">0</div>
+            <div class="k-foot" id="kpiOnTrackFoot">proyek tepat waktu</div>
           </div>
         </div>
         <div class="kpi">
@@ -649,12 +649,20 @@
 /* =====================================================================
    KONEKSI KE GOOGLE SHEETS — DATA PROYEK
    1. Buat Google Sheet dengan kolom header persis:
-        name, region, pic, planned, actual, deadline, status, status_bank
+        name, region, pic, planned, actual, deadline, status, status_bank,
+        actual prog., ontime
       - Kolom "status" diisi tahap proyek, misal: On Progress / Selesai / Belum Mulai
         (dipakai untuk KPI "Total Progress" & filter "Tahap Proyek")
       - Kolom "status_bank" (boleh diberi nama header: "Status Bank") diisi status
         pengajuan bank per unit. ISI (tidak kosong) = unit tsb berstatus SP3K.
         KOSONG = unit tsb dihitung sebagai Ready Stock.
+      - Kolom "actual prog." diisi (apa saja, tidak kosong) untuk menandai proyek
+        yang SEDANG On Progress dan berpotensi telat. Dipakai untuk KPI
+        "Potential Late" — COUNTIF: baris dengan stage = On Progress DAN kolom
+        ini tidak kosong.
+      - Kolom "ontime" diisi (apa saja, tidak kosong) untuk menandai proyek yang
+        SEDANG On Progress dan berjalan tepat waktu. Dipakai untuk KPI "On Track"
+        — COUNTIF: baris dengan stage = On Progress DAN kolom ini tidak kosong.
    2. File > Share > Publish to web > pilih sheet-nya > format CSV > Publish
    3. Salin link CSV yang muncul, tempel di SHEET_CSV_URL di bawah ini
    Jika dikosongkan, dashboard otomatis memakai DEMO_PROJECTS di bawah.
@@ -678,18 +686,18 @@ const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9
 const STATUS_BANK_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9mAuPr0hWTRnspZRKdmDlDS6BtiJ8BBrrq4Ay1mEjbYc2Qfze76VpXKSEs3gz3yw9ZYkY71/pub?gid=1125246992&single=true&output=csv";
 
 const DEMO_PROJECTS = [
-  {name:"Gedung Perkantoran Menara A", region:"Jakarta", pic:"Rudi Santoso", planned:80, actual:74, deadline:"2026-10-15", stage:"On Progress", statusBank:"Approved"},
-  {name:"Perumahan Griya Asri Blok C", region:"Bekasi", pic:"Siti Aminah", planned:65, actual:66, deadline:"2026-11-02", stage:"On Progress", statusBank:"Approved"},
-  {name:"Rusun Pekerja Cikarang", region:"Bekasi", pic:"Bambang Wijaya", planned:50, actual:34, deadline:"2026-09-20", stage:"On Progress", statusBank:""},
-  {name:"Pabrik Manufaktur Blok D", region:"Karawang", pic:"Rudi Santoso", planned:90, actual:91, deadline:"2026-09-05", stage:"On Progress", statusBank:"Approved"},
-  {name:"Gudang Logistik Terpadu", region:"Cikampek", pic:"Dewi Lestari", planned:40, actual:28, deadline:"2026-12-10", stage:"Belum Mulai", statusBank:""},
-  {name:"Mall Sentosa Extension", region:"Jakarta", pic:"Dewi Lestari", planned:70, actual:69, deadline:"2026-10-30", stage:"On Progress", statusBank:"Approved"},
-  {name:"Apartemen Green Tower B", region:"Bandung", pic:"Bambang Wijaya", planned:55, actual:41, deadline:"2026-09-25", stage:"On Progress", statusBank:"Proses"},
-  {name:"Rumah Sakit Cabang Timur", region:"Bandung", pic:"Siti Aminah", planned:30, actual:29, deadline:"2027-01-15", stage:"Belum Mulai", statusBank:""},
-  {name:"Sekolah Terpadu Wilayah 2", region:"Bogor", pic:"Rudi Santoso", planned:85, actual:79, deadline:"2026-09-18", stage:"On Progress", statusBank:"Approved"},
-  {name:"Jembatan Penghubung Cikarang", region:"Bekasi", pic:"Dewi Lestari", planned:45, actual:22, deadline:"2026-09-10", stage:"On Progress", statusBank:""},
-  {name:"Kantor Cabang Bogor", region:"Bogor", pic:"Bambang Wijaya", planned:95, actual:96, deadline:"2026-08-30", stage:"Selesai", statusBank:"Approved"},
-  {name:"Terminal Distribusi Barat", region:"Karawang", pic:"Siti Aminah", planned:60, actual:52, deadline:"2026-11-20", stage:"On Progress", statusBank:""},
+  {name:"Gedung Perkantoran Menara A", region:"Jakarta", pic:"Rudi Santoso", planned:80, actual:74, deadline:"2026-10-15", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
+  {name:"Perumahan Griya Asri Blok C", region:"Bekasi", pic:"Siti Aminah", planned:65, actual:66, deadline:"2026-11-02", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
+  {name:"Rusun Pekerja Cikarang", region:"Bekasi", pic:"Bambang Wijaya", planned:50, actual:34, deadline:"2026-09-20", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:""},
+  {name:"Pabrik Manufaktur Blok D", region:"Karawang", pic:"Rudi Santoso", planned:90, actual:91, deadline:"2026-09-05", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
+  {name:"Gudang Logistik Terpadu", region:"Cikampek", pic:"Dewi Lestari", planned:40, actual:28, deadline:"2026-12-10", stage:"Belum Mulai", statusBank:"", actualProg:"", ontime:""},
+  {name:"Mall Sentosa Extension", region:"Jakarta", pic:"Dewi Lestari", planned:70, actual:69, deadline:"2026-10-30", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
+  {name:"Apartemen Green Tower B", region:"Bandung", pic:"Bambang Wijaya", planned:55, actual:41, deadline:"2026-09-25", stage:"On Progress", statusBank:"Proses", actualProg:"Berpotensi Telat", ontime:""},
+  {name:"Rumah Sakit Cabang Timur", region:"Bandung", pic:"Siti Aminah", planned:30, actual:29, deadline:"2027-01-15", stage:"Belum Mulai", statusBank:"", actualProg:"", ontime:""},
+  {name:"Sekolah Terpadu Wilayah 2", region:"Bogor", pic:"Rudi Santoso", planned:85, actual:79, deadline:"2026-09-18", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
+  {name:"Jembatan Penghubung Cikarang", region:"Bekasi", pic:"Dewi Lestari", planned:45, actual:22, deadline:"2026-09-10", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:""},
+  {name:"Kantor Cabang Bogor", region:"Bogor", pic:"Bambang Wijaya", planned:95, actual:96, deadline:"2026-08-30", stage:"Selesai", statusBank:"Approved", actualProg:"", ontime:""},
+  {name:"Terminal Distribusi Barat", region:"Karawang", pic:"Siti Aminah", planned:60, actual:52, deadline:"2026-11-20", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:""},
 ];
 
 // Data contoh sumber "status bank" (sheet/csv terpisah dari data proyek di atas)
@@ -745,6 +753,12 @@ function deriveFields(list){
     // "statusBank" = kolom status pengajuan bank per unit di CSV PROYEK.
     // Tidak kosong = unit berstatus SP3K. Kosong = unit dihitung Ready Stock.
     p.statusBank = (p.statusBank || "").toString().trim();
+    // "actualProg" = kolom "actual prog." di CSV PROYEK.
+    // Tidak kosong = proyek (yang sedang On Progress) berpotensi telat -> KPI "Potential Late".
+    p.actualProg = (p.actualProg || "").toString().trim();
+    // "ontime" = kolom "ontime" di CSV PROYEK.
+    // Tidak kosong = proyek (yang sedang On Progress) berjalan tepat waktu -> KPI "On Track".
+    p.ontime = (p.ontime || "").toString().trim();
   });
   return list;
 }
@@ -769,6 +783,8 @@ async function loadData(){
       deadline: (row.deadline || row.Deadline || "").toString().trim(),
       stage: (row.stage || row.Stage || row.status || row.Status || "").toString().trim(),
       statusBank: (row.status_bank || row["Status Bank"] || row.statusBank || row["status bank"] || "").toString().trim(),
+      actualProg: (row["actual prog."] || row["Actual Prog."] || row["actual prog"] || row["Actual Prog"] || row.actualProg || "").toString().trim(),
+      ontime: (row.ontime || row.Ontime || row["On Time"] || row["on time"] || row.OnTime || "").toString().trim(),
     })).filter(p=>p.name);
     if(!mapped.length) throw new Error("Sheet kosong atau kolom tidak sesuai");
     setSyncInfo("Terhubung ke Google Sheets · " + new Date().toLocaleTimeString("id-ID"));
@@ -895,32 +911,48 @@ function renderScorecardBangun(data){
   document.getElementById("sbReadyMunculPct").textContent = Math.round(pctReadyMuncul) + "%";
 }
 
+/* =====================================================================
+   TIGA SCORECARD KPI ATAS (Total Progress / On Track / Potential Late)
+   - Total Progress  = COUNTIF kolom "Status/stage" bernilai "On Progress"
+                       (relatif terhadap seluruh proyek yang lolos filter aktif)
+   - On Track        = di ANTARA proyek yang berstatus "On Progress", COUNTIF
+                       baris yang kolom "ontime" di CSV proyek TIDAK KOSONG
+   - Potential Late   = di ANTARA proyek yang berstatus "On Progress", COUNTIF
+                       baris yang kolom "actual prog." di CSV proyek TIDAK KOSONG
+   Filter wilayah/PIC yang aktif otomatis berlaku karena ketiganya dihitung
+   dari `data` (hasil getFiltered()), bukan dari seluruh PROJECTS.
+===================================================================== */
 function render(){
   const data = getFiltered();
 
   renderScorecardBangun(data);
 
   const totalBangun = data.length; // COUNTA: jumlah baris proyek (bernama) yang lolos filter aktif
-  const avgDeviasi = data.length ? data.reduce((s,p)=>s+p.deviation,0)/data.length : 0;
-  const totalLate = data.filter(p=>p.status==="late").length;
-  const lateRatio = totalBangun ? (totalLate/totalBangun)*100 : 0;
-  // Total Progress = COUNTIF kolom "Status" di sheet yang bernilai "On Progress" (tidak peka huruf besar/kecil)
-  const totalOngoing = data.filter(p=>p.stageNorm === "on progress").length;
+  const onProgressData = data.filter(p=>p.stageNorm === "on progress");
+  const totalOngoing = onProgressData.length;
   const ongoingRatio = totalBangun ? (totalOngoing/totalBangun)*100 : 0;
 
+  const totalOnTrack = onProgressData.filter(p=>p.ontime !== "").length;
+  const onTrackRatio = totalOngoing ? (totalOnTrack/totalOngoing)*100 : 0;
+
+  const totalLate = onProgressData.filter(p=>p.actualProg !== "").length;
+  const lateRatio = totalOngoing ? (totalLate/totalOngoing)*100 : 0;
+
+  // ---- Total Progress ----
   document.getElementById("kpiProgress").textContent = totalOngoing;
   document.getElementById("kpiProgressFoot").textContent = totalBangun ? Math.round(ongoingRatio)+"% berstatus On Progress" : "tidak ada data";
-  document.getElementById("dialProgress").textContent = totalOngoing;
+  document.getElementById("dialProgress").textContent = "⏳";
   document.getElementById("dialProgressWrap").style.setProperty("--pct", ongoingRatio);
 
-  document.getElementById("kpiDeviasi").textContent = (avgDeviasi>0?"+":"")+avgDeviasi.toFixed(1)+"%";
-  document.getElementById("kpiDeviasi").style.color = avgDeviasi < -0.5 ? "var(--red)" : (avgDeviasi > 0.5 ? "var(--green)" : "var(--text)");
-  document.getElementById("kpiDeviasiFoot").textContent = avgDeviasi < 0 ? "rata-rata tertinggal dari rencana" : "rata-rata sesuai/lebih cepat";
-  document.getElementById("dialDeviasi").textContent = (avgDeviasi>0?"+":"")+avgDeviasi.toFixed(0)+"%";
-  document.getElementById("dialDeviasiWrap").style.setProperty("--pct", Math.min(Math.abs(avgDeviasi)*4,100));
+  // ---- On Track ----
+  document.getElementById("kpiOnTrack").textContent = totalOnTrack;
+  document.getElementById("kpiOnTrackFoot").textContent = totalOngoing ? Math.round(onTrackRatio)+"% dari proyek On Progress" : "tidak ada data";
+  document.getElementById("dialOnTrack").textContent = totalOnTrack;
+  document.getElementById("dialOnTrackWrap").style.setProperty("--pct", onTrackRatio);
 
+  // ---- Potential Late ----
   document.getElementById("kpiLate").textContent = totalLate;
-  document.getElementById("kpiLateFoot").textContent = totalBangun ? Math.round(lateRatio)+"% dari proyek ditampilkan" : "tidak ada data";
+  document.getElementById("kpiLateFoot").textContent = totalOngoing ? Math.round(lateRatio)+"% dari proyek On Progress" : "tidak ada data";
   document.getElementById("dialLate").textContent = totalLate;
   document.getElementById("dialLateWrap").style.setProperty("--pct", lateRatio);
 
