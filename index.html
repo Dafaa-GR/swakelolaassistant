@@ -667,11 +667,12 @@ const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9
    "Total SP3K Muncul" & "Total Ready Stock Muncul" di scorecard Total Bangun.
    Kolom header yang didukung:
       - region
-      - Total SP3K        -> baris yang TIDAK KOSONG dihitung sebagai SP3K Muncul (COUNTIF)
-      - Total Ready Stock (atau "Ready Stock") -> kolom ini berisi ANGKA JADI per baris
-        (sudah berupa total, bukan penanda status), sehingga nilainya langsung DIJUMLAHKAN
-        (SUM) untuk mendapatkan Ready Stock Muncul — bukan dihitung baris yang tidak kosong.
-        Kolom ini berdiri sendiri/independen dari kolom Total SP3K.
+      - Total SP3K        -> kolom ini berisi ANGKA JADI per baris (sudah berupa
+        total, bukan penanda status), nilainya langsung DIJUMLAHKAN (SUM) untuk
+        mendapatkan SP3K Muncul — bukan dihitung baris yang tidak kosong.
+      - Total Ready Stock (atau "Ready Stock") -> kolom ini juga berisi ANGKA JADI
+        per baris, nilainya langsung DIJUMLAHKAN (SUM) untuk mendapatkan Ready
+        Stock Muncul. Kolom ini berdiri sendiri/independen dari kolom Total SP3K.
    Jika dikosongkan, dashboard otomatis memakai DEMO_STATUS_BANK di bawah.
 ===================================================================== */
 const STATUS_BANK_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9mAuPr0hWTRnspZRKdmDlDS6BtiJ8BBrrq4Ay1mEjbYc2Qfze76VpXKSEs3gz3yw9ZYkY71/pub?gid=1125246992&single=true&output=csv";
@@ -692,25 +693,25 @@ const DEMO_PROJECTS = [
 ];
 
 // Data contoh sumber "status bank" (sheet/csv terpisah dari data proyek di atas)
-// totalSP3K = penanda status per-baris (dihitung dgn COUNTIF baris tidak kosong)
-// totalReadyStock = ANGKA JADI per baris (langsung DIJUMLAHKAN/SUM), independen dari totalSP3K
+// totalSP3K dan totalReadyStock SAMA-SAMA angka jadi per baris (langsung DIJUMLAHKAN/SUM),
+// dan dihitung INDEPENDEN satu sama lain
 const DEMO_STATUS_BANK = [
-  {region:"Jakarta", totalSP3K:"Approved", totalReadyStock:0},
-  {region:"Jakarta", totalSP3K:"Approved", totalReadyStock:0},
-  {region:"Bekasi", totalSP3K:"Approved", totalReadyStock:0},
-  {region:"Bekasi", totalSP3K:"Approved", totalReadyStock:0},
-  {region:"Karawang", totalSP3K:"Approved", totalReadyStock:0},
-  {region:"Karawang", totalSP3K:"Approved", totalReadyStock:0},
-  {region:"Bandung", totalSP3K:"Proses", totalReadyStock:0},
-  {region:"Bogor", totalSP3K:"Approved", totalReadyStock:0},
-  {region:"Bogor", totalSP3K:"Approved", totalReadyStock:0},
-  {region:"Jakarta", totalSP3K:"Approved", totalReadyStock:0},
-  {region:"Bekasi", totalSP3K:"Approved", totalReadyStock:0},
-  {region:"Karawang", totalSP3K:"Approved", totalReadyStock:0},
-  {region:"Cikampek", totalSP3K:"", totalReadyStock:1},
-  {region:"Bandung", totalSP3K:"", totalReadyStock:1},
-  {region:"Bekasi", totalSP3K:"", totalReadyStock:1},
-  {region:"Karawang", totalSP3K:"", totalReadyStock:1},
+  {region:"Jakarta", totalSP3K:1, totalReadyStock:0},
+  {region:"Jakarta", totalSP3K:1, totalReadyStock:0},
+  {region:"Bekasi", totalSP3K:1, totalReadyStock:0},
+  {region:"Bekasi", totalSP3K:1, totalReadyStock:0},
+  {region:"Karawang", totalSP3K:1, totalReadyStock:0},
+  {region:"Karawang", totalSP3K:1, totalReadyStock:0},
+  {region:"Bandung", totalSP3K:1, totalReadyStock:0},
+  {region:"Bogor", totalSP3K:1, totalReadyStock:0},
+  {region:"Bogor", totalSP3K:1, totalReadyStock:0},
+  {region:"Jakarta", totalSP3K:1, totalReadyStock:0},
+  {region:"Bekasi", totalSP3K:1, totalReadyStock:0},
+  {region:"Karawang", totalSP3K:1, totalReadyStock:0},
+  {region:"Cikampek", totalSP3K:0, totalReadyStock:1},
+  {region:"Bandung", totalSP3K:0, totalReadyStock:1},
+  {region:"Bekasi", totalSP3K:0, totalReadyStock:1},
+  {region:"Karawang", totalSP3K:0, totalReadyStock:1},
 ];
 
 const statusLabel = {ontrack:"On Track", warning:"Perlu Perhatian", late:"Berpotensi Terlambat"};
@@ -846,17 +847,18 @@ function formatDate(d){
 /* =====================================================================
    SCORECARD TOTAL BANGUN — logika perhitungan
    1. Total Bangun          = jumlah baris proyek yang lolos filter (COUNTA)
-   2. Total SP3K Muncul     = jumlah baris di sumber "status bank" (CSV terpisah)
-                              yang kolom "Total SP3K" TIDAK KOSONG (COUNTIF)
+   2. Total SP3K Muncul     = SUM angka pada kolom "Total SP3K" di sumber
+                              "status bank" (CSV terpisah). Kolom ini sudah
+                              berisi angka total jadi/siap per baris, jadi
+                              tinggal DIJUMLAHKAN — bukan di-COUNTIF.
    3. % di sebelah SP3K Muncul
                             = (jumlah baris proyek yang kolom status_bank TIDAK KOSONG)
                               / Total SP3K Muncul (poin 2)
    4. Total Ready Stock Muncul
                             = SUM angka pada kolom "Total Ready Stock" di sumber
-                              "status bank". Kolom ini SUDAH berisi angka total
-                              jadi/siap (bukan penanda status per-baris), jadi
-                              di sini tinggal DIJUMLAHKAN — tidak di-COUNTIF, dan
-                              independen dari kolom Total SP3K.
+                              "status bank". Kolom ini juga SUDAH berisi angka
+                              total jadi/siap per baris, jadi tinggal DIJUMLAHKAN
+                              — independen dari kolom Total SP3K.
    5. % di sebelah Ready Stock Muncul
                             = (jumlah baris proyek yang kolom status_bank KOSONG)
                               / Total Ready Stock Muncul (poin 4)
@@ -869,9 +871,9 @@ function renderScorecardBangun(data){
   const projSp3kCount = data.filter(p=>p.statusBank !== "").length;
   const projReadyCount = data.filter(p=>p.statusBank === "").length;
 
-  const bankSp3kMuncul = STATUS_BANK.filter(r=>r.totalSP3K !== "").length;
-  // Kolom "Total Ready Stock" sudah berisi angka jadi per baris -> tinggal dijumlahkan (SUM),
-  // bukan dihitung jumlah baris yang tidak kosong (COUNTIF).
+  // Kolom "Total SP3K" dan "Total Ready Stock" SAMA-SAMA sudah berisi angka jadi
+  // per baris -> keduanya tinggal DIJUMLAHKAN (SUM), bukan di-COUNTIF.
+  const bankSp3kMuncul = STATUS_BANK.reduce((sum,r)=> sum + (Number(r.totalSP3K) || 0), 0);
   const bankReadyMuncul = STATUS_BANK.reduce((sum,r)=> sum + (Number(r.totalReadyStock) || 0), 0);
 
   const pctSp3kMuncul = bankSp3kMuncul ? (projSp3kCount / bankSp3kMuncul) * 100 : 0;
