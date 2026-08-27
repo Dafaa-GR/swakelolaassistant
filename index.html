@@ -155,7 +155,7 @@
   .reset-btn:hover{background:#25689f;}
 
   /* ===== KPI dials ===== */
-  .kpi-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:22px;}
+  .kpi-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:16px;}
   .kpi{
     background:var(--panel); border:1px solid var(--line); border-radius:10px;
     padding:16px 18px; display:flex; align-items:center; gap:15px;
@@ -171,6 +171,39 @@
   .kpi .k-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);font-weight:700;}
   .kpi .k-value{font-size:25px;font-weight:800;margin:3px 0 3px;color:var(--text);line-height:1;}
   .kpi .k-foot{font-size:11px;color:var(--text-dim);}
+
+  /* ===== Scorecard: Total Bangun (SP3K / Ready Stock) ===== */
+  .scorecard-bangun{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:20px 26px; margin-bottom:16px;
+    display:flex; align-items:stretch; gap:26px; flex-wrap:wrap;
+  }
+  .sb-left{display:flex; align-items:center; gap:16px; flex:1.3; min-width:280px;}
+  .sb-icon{
+    width:64px;height:64px;border-radius:50%;
+    border:5px solid var(--blue); background:#fff;
+    display:flex;align-items:center;justify-content:center; flex-shrink:0;
+  }
+  .sb-icon svg{width:26px;height:26px;fill:var(--blue);}
+  .sb-left-body{flex:1;min-width:0;}
+  .sb-label{font-size:12.5px;font-weight:800;letter-spacing:.3px;color:#4b5567;text-transform:uppercase;}
+  .sb-value{font-size:34px;font-weight:800;color:var(--text);line-height:1.15;margin:2px 0 10px;}
+  .sb-value .unit{font-size:14px;font-weight:700;color:var(--text-dim);margin-left:4px;}
+  .sb-subrow{display:flex;align-items:center;gap:20px;}
+  .sb-sub{display:flex;flex-direction:column;}
+  .sb-sub-num{font-size:20px;font-weight:800;color:var(--text);}
+  .sb-sub-num sup{font-size:12px;font-weight:700;color:var(--text-dim);margin-left:2px;}
+  .sb-sub-label{font-size:10.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
+  .sb-divider-v{width:1px;align-self:stretch;background:var(--line);flex-shrink:0;}
+  .sb-right{flex:1;min-width:230px;display:flex;flex-direction:column;justify-content:center;gap:14px;}
+  .sb-right-row{}
+  .sb-right-label{font-size:11.5px;font-weight:800;letter-spacing:.3px;color:#4b5567;text-transform:uppercase;margin-bottom:4px;}
+  .sb-right-nums{display:flex;align-items:baseline;gap:12px;}
+  .sb-right-num{font-size:26px;font-weight:800;color:var(--text-dim);}
+  .sb-right-sep{width:1px;height:26px;background:var(--line);}
+  .sb-right-pct{display:flex;flex-direction:column;}
+  .sb-right-pct b{font-size:26px;font-weight:800;color:var(--text-dim);line-height:1;}
+  .sb-right-pct span{font-size:10.5px;color:var(--text-dim);margin-top:2px;}
 
   /* ===== Panels ===== */
   .panel{
@@ -240,6 +273,10 @@
     .sb-close{display:block;}
     .hamburger{display:flex;}
     .sb-backdrop.show{display:block;}
+  }
+  @media (max-width:700px){
+    .scorecard-bangun{flex-direction:column;}
+    .sb-divider-v{width:auto;height:1px;align-self:stretch;}
   }
   @media (max-width:560px){
     .kpi-grid{grid-template-columns:1fr;}
@@ -344,15 +381,49 @@
         <button class="reset-btn" id="btnReset">Reset</button>
       </div>
 
-      <div class="kpi-grid" id="kpi">
-        <div class="kpi">
-          <div class="dial" style="--accent:#2f7fc4; --pct:100;"><span class="dial-txt" id="dialTotalBangun">0</span></div>
-          <div class="kpi-body">
-            <div class="k-label">Total Bangun</div>
-            <div class="k-value" id="kpiTotalBangun">0</div>
-            <div class="k-foot" id="kpiTotalBangunFoot">proyek berjalan</div>
+      <!-- ===== Scorecard: Total Bangun / SP3K / Ready Stock ===== -->
+      <div class="scorecard-bangun" id="scorecardBangun">
+        <div class="sb-left">
+          <div class="sb-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2 2 9.5V22h6.5v-7h7v7H22V9.5L12 2z"/></svg>
+          </div>
+          <div class="sb-left-body">
+            <div class="sb-label">Total Bangun</div>
+            <div class="sb-value"><span id="sbTotalBangun">0</span><span class="unit">unit</span></div>
+            <div class="sb-subrow">
+              <div class="sb-sub">
+                <div class="sb-sub-num" id="sbSp3kCount">0<sup id="sbSp3kPct">/0%</sup></div>
+                <div class="sb-sub-label">SP3K</div>
+              </div>
+              <div class="sb-sub">
+                <div class="sb-sub-num" id="sbReadyCount">0<sup id="sbReadyPct">/0%</sup></div>
+                <div class="sb-sub-label">Ready Stock</div>
+              </div>
+            </div>
           </div>
         </div>
+        <div class="sb-divider-v"></div>
+        <div class="sb-right">
+          <div class="sb-right-row">
+            <div class="sb-right-label">Total SP3K Muncul</div>
+            <div class="sb-right-nums">
+              <span class="sb-right-num" id="sbSp3kMuncul">0</span>
+              <span class="sb-right-sep"></span>
+              <div class="sb-right-pct"><b id="sbSp3kMunculPct">0%</b><span>yang dibangun</span></div>
+            </div>
+          </div>
+          <div class="sb-right-row">
+            <div class="sb-right-label">Total Ready Stock Muncul</div>
+            <div class="sb-right-nums">
+              <span class="sb-right-num" id="sbReadyMuncul">0</span>
+              <span class="sb-right-sep"></span>
+              <div class="sb-right-pct"><b id="sbReadyMunculPct">0%</b><span>yang dibangun</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="kpi">
         <div class="kpi">
           <div class="dial" style="--accent:#1f9d63; --pct:0;" id="dialProgressWrap"><span class="dial-txt" id="dialProgress">0</span></div>
           <div class="kpi-body">
@@ -472,7 +543,7 @@
         <button class="reset-btn" id="btnEmpReset">Reset</button>
       </div>
 
-      <div class="kpi-grid" id="empKpi">
+      <div class="kpi-grid" id="empKpi" style="grid-template-columns:repeat(4,1fr);">
         <div class="kpi">
           <div class="dial" style="--accent:#2f7fc4; --pct:100;"><span class="dial-txt" id="edialTotal">0</span></div>
           <div class="kpi-body">
@@ -576,35 +647,77 @@
 
 <script>
 /* =====================================================================
-   KONEKSI KE GOOGLE SHEETS
-   1. Buat Google Sheet dengan kolom header persis: name, region, pic, planned, actual, deadline, status
+   KONEKSI KE GOOGLE SHEETS — DATA PROYEK
+   1. Buat Google Sheet dengan kolom header persis:
+        name, region, pic, planned, actual, deadline, status, status_bank
       - Kolom "status" diisi tahap proyek, misal: On Progress / Selesai / Belum Mulai
         (dipakai untuk KPI "Total Progress" & filter "Tahap Proyek")
+      - Kolom "status_bank" (boleh diberi nama header: "Status Bank") diisi status
+        pengajuan bank per unit. ISI (tidak kosong) = unit tsb berstatus SP3K.
+        KOSONG = unit tsb dihitung sebagai Ready Stock.
    2. File > Share > Publish to web > pilih sheet-nya > format CSV > Publish
    3. Salin link CSV yang muncul, tempel di SHEET_CSV_URL di bawah ini
    Jika dikosongkan, dashboard otomatis memakai DEMO_PROJECTS di bawah.
 ===================================================================== */
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9mAuPr0hWTRnspZRKdmDlDS6BtiJ8BBrrq4Ay1mEjbYc2Qfze76VpXKSEs3gz3yw9ZYkY71/pub?gid=0&single=true&output=csv";
 
+/* =====================================================================
+   KONEKSI KE GOOGLE SHEETS — DATA STATUS BANK (sumber terpisah)
+   Sheet/CSV ini TERPISAH dari data proyek di atas. Dipakai untuk KPI
+   "Total SP3K Muncul" & "Total Ready Stock Muncul" di scorecard Total Bangun.
+   Kolom header yang didukung:
+      - region
+      - Total SP3K        -> baris yang TIDAK KOSONG dihitung sebagai SP3K Muncul (COUNTIF)
+      - Total Ready Stock (atau "Ready Stock") -> kolom ini berisi ANGKA JADI per baris
+        (sudah berupa total, bukan penanda status), sehingga nilainya langsung DIJUMLAHKAN
+        (SUM) untuk mendapatkan Ready Stock Muncul — bukan dihitung baris yang tidak kosong.
+        Kolom ini berdiri sendiri/independen dari kolom Total SP3K.
+   Jika dikosongkan, dashboard otomatis memakai DEMO_STATUS_BANK di bawah.
+===================================================================== */
+const STATUS_BANK_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9mAuPr0hWTRnspZRKdmDlDS6BtiJ8BBrrq4Ay1mEjbYc2Qfze76VpXKSEs3gz3yw9ZYkY71/pub?gid=1125246992&single=true&output=csv";
+
 const DEMO_PROJECTS = [
-  {name:"Gedung Perkantoran Menara A", region:"Jakarta", pic:"Rudi Santoso", planned:80, actual:74, deadline:"2026-10-15", stage:"On Progress"},
-  {name:"Perumahan Griya Asri Blok C", region:"Bekasi", pic:"Siti Aminah", planned:65, actual:66, deadline:"2026-11-02", stage:"On Progress"},
-  {name:"Rusun Pekerja Cikarang", region:"Bekasi", pic:"Bambang Wijaya", planned:50, actual:34, deadline:"2026-09-20", stage:"On Progress"},
-  {name:"Pabrik Manufaktur Blok D", region:"Karawang", pic:"Rudi Santoso", planned:90, actual:91, deadline:"2026-09-05", stage:"On Progress"},
-  {name:"Gudang Logistik Terpadu", region:"Cikampek", pic:"Dewi Lestari", planned:40, actual:28, deadline:"2026-12-10", stage:"Belum Mulai"},
-  {name:"Mall Sentosa Extension", region:"Jakarta", pic:"Dewi Lestari", planned:70, actual:69, deadline:"2026-10-30", stage:"On Progress"},
-  {name:"Apartemen Green Tower B", region:"Bandung", pic:"Bambang Wijaya", planned:55, actual:41, deadline:"2026-09-25", stage:"On Progress"},
-  {name:"Rumah Sakit Cabang Timur", region:"Bandung", pic:"Siti Aminah", planned:30, actual:29, deadline:"2027-01-15", stage:"Belum Mulai"},
-  {name:"Sekolah Terpadu Wilayah 2", region:"Bogor", pic:"Rudi Santoso", planned:85, actual:79, deadline:"2026-09-18", stage:"On Progress"},
-  {name:"Jembatan Penghubung Cikarang", region:"Bekasi", pic:"Dewi Lestari", planned:45, actual:22, deadline:"2026-09-10", stage:"On Progress"},
-  {name:"Kantor Cabang Bogor", region:"Bogor", pic:"Bambang Wijaya", planned:95, actual:96, deadline:"2026-08-30", stage:"Selesai"},
-  {name:"Terminal Distribusi Barat", region:"Karawang", pic:"Siti Aminah", planned:60, actual:52, deadline:"2026-11-20", stage:"On Progress"},
+  {name:"Gedung Perkantoran Menara A", region:"Jakarta", pic:"Rudi Santoso", planned:80, actual:74, deadline:"2026-10-15", stage:"On Progress", statusBank:"Approved"},
+  {name:"Perumahan Griya Asri Blok C", region:"Bekasi", pic:"Siti Aminah", planned:65, actual:66, deadline:"2026-11-02", stage:"On Progress", statusBank:"Approved"},
+  {name:"Rusun Pekerja Cikarang", region:"Bekasi", pic:"Bambang Wijaya", planned:50, actual:34, deadline:"2026-09-20", stage:"On Progress", statusBank:""},
+  {name:"Pabrik Manufaktur Blok D", region:"Karawang", pic:"Rudi Santoso", planned:90, actual:91, deadline:"2026-09-05", stage:"On Progress", statusBank:"Approved"},
+  {name:"Gudang Logistik Terpadu", region:"Cikampek", pic:"Dewi Lestari", planned:40, actual:28, deadline:"2026-12-10", stage:"Belum Mulai", statusBank:""},
+  {name:"Mall Sentosa Extension", region:"Jakarta", pic:"Dewi Lestari", planned:70, actual:69, deadline:"2026-10-30", stage:"On Progress", statusBank:"Approved"},
+  {name:"Apartemen Green Tower B", region:"Bandung", pic:"Bambang Wijaya", planned:55, actual:41, deadline:"2026-09-25", stage:"On Progress", statusBank:"Proses"},
+  {name:"Rumah Sakit Cabang Timur", region:"Bandung", pic:"Siti Aminah", planned:30, actual:29, deadline:"2027-01-15", stage:"Belum Mulai", statusBank:""},
+  {name:"Sekolah Terpadu Wilayah 2", region:"Bogor", pic:"Rudi Santoso", planned:85, actual:79, deadline:"2026-09-18", stage:"On Progress", statusBank:"Approved"},
+  {name:"Jembatan Penghubung Cikarang", region:"Bekasi", pic:"Dewi Lestari", planned:45, actual:22, deadline:"2026-09-10", stage:"On Progress", statusBank:""},
+  {name:"Kantor Cabang Bogor", region:"Bogor", pic:"Bambang Wijaya", planned:95, actual:96, deadline:"2026-08-30", stage:"Selesai", statusBank:"Approved"},
+  {name:"Terminal Distribusi Barat", region:"Karawang", pic:"Siti Aminah", planned:60, actual:52, deadline:"2026-11-20", stage:"On Progress", statusBank:""},
+];
+
+// Data contoh sumber "status bank" (sheet/csv terpisah dari data proyek di atas)
+// totalSP3K = penanda status per-baris (dihitung dgn COUNTIF baris tidak kosong)
+// totalReadyStock = ANGKA JADI per baris (langsung DIJUMLAHKAN/SUM), independen dari totalSP3K
+const DEMO_STATUS_BANK = [
+  {region:"Jakarta", totalSP3K:"Approved", totalReadyStock:0},
+  {region:"Jakarta", totalSP3K:"Approved", totalReadyStock:0},
+  {region:"Bekasi", totalSP3K:"Approved", totalReadyStock:0},
+  {region:"Bekasi", totalSP3K:"Approved", totalReadyStock:0},
+  {region:"Karawang", totalSP3K:"Approved", totalReadyStock:0},
+  {region:"Karawang", totalSP3K:"Approved", totalReadyStock:0},
+  {region:"Bandung", totalSP3K:"Proses", totalReadyStock:0},
+  {region:"Bogor", totalSP3K:"Approved", totalReadyStock:0},
+  {region:"Bogor", totalSP3K:"Approved", totalReadyStock:0},
+  {region:"Jakarta", totalSP3K:"Approved", totalReadyStock:0},
+  {region:"Bekasi", totalSP3K:"Approved", totalReadyStock:0},
+  {region:"Karawang", totalSP3K:"Approved", totalReadyStock:0},
+  {region:"Cikampek", totalSP3K:"", totalReadyStock:1},
+  {region:"Bandung", totalSP3K:"", totalReadyStock:1},
+  {region:"Bekasi", totalSP3K:"", totalReadyStock:1},
+  {region:"Karawang", totalSP3K:"", totalReadyStock:1},
 ];
 
 const statusLabel = {ontrack:"On Track", warning:"Perlu Perhatian", late:"Berpotensi Terlambat"};
 const statusColor = {ontrack:"#1f9d63", warning:"#d98e21", late:"#e0483a"};
 
 let PROJECTS = [];
+let STATUS_BANK = [];
 let sortKey = "deviation";
 let sortDir = 1;
 let charts = {};
@@ -628,6 +741,9 @@ function deriveFields(list){
     p.stage = (p.stage || "").toString().trim();
     if(!p.stage) p.stage = "Tanpa Status"; // kolom Status kosong/tidak terbaca di sheet -> JANGAN dianggap "On Progress"
     p.stageNorm = p.stage.toLowerCase();
+    // "statusBank" = kolom status pengajuan bank per unit di CSV PROYEK.
+    // Tidak kosong = unit berstatus SP3K. Kosong = unit dihitung Ready Stock.
+    p.statusBank = (p.statusBank || "").toString().trim();
   });
   return list;
 }
@@ -651,6 +767,7 @@ async function loadData(){
       actual: Number(row.actual || row["Realisasi %"] || row.Realisasi || 0),
       deadline: (row.deadline || row.Deadline || "").toString().trim(),
       stage: (row.stage || row.Stage || row.status || row.Status || "").toString().trim(),
+      statusBank: (row.status_bank || row["Status Bank"] || row.statusBank || row["status bank"] || "").toString().trim(),
     })).filter(p=>p.name);
     if(!mapped.length) throw new Error("Sheet kosong atau kolom tidak sesuai");
     setSyncInfo("Terhubung ke Google Sheets · " + new Date().toLocaleTimeString("id-ID"));
@@ -659,6 +776,28 @@ async function loadData(){
     console.warn("Gagal memuat data dari Google Sheets, memakai data contoh.", e);
     setSyncInfo("Gagal sinkron — memakai data contoh");
     return DEMO_PROJECTS;
+  }
+}
+
+async function loadStatusBank(){
+  if(!STATUS_BANK_CSV_URL){
+    return DEMO_STATUS_BANK;
+  }
+  try{
+    const bust = (STATUS_BANK_CSV_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
+    const res = await fetch(STATUS_BANK_CSV_URL + bust);
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const text = await res.text();
+    const parsed = Papa.parse(text, {header:true, skipEmptyLines:true});
+    const mapped = parsed.data.map(row=>({
+      region: (row.region || row.Region || row.Wilayah || "").toString().trim(),
+      totalSP3K: (row["Total SP3K"] || row.totalSP3K || row.total_sp3k || row["status bank"] || "").toString().trim(),
+      totalReadyStock: (row["Total Ready Stock"] || row["Ready Stock"] || row.totalReadyStock || row.total_ready_stock || "").toString().trim(),
+    }));
+    return mapped.length ? mapped : DEMO_STATUS_BANK;
+  }catch(e){
+    console.warn("Gagal memuat data status bank, memakai data contoh.", e);
+    return DEMO_STATUS_BANK;
   }
 }
 
@@ -683,6 +822,7 @@ function populateFilters(){
 
 async function boot(){
   PROJECTS = deriveFields(await loadData());
+  STATUS_BANK = await loadStatusBank();
   populateFilters();
   renderTrendChart();
   render();
@@ -703,8 +843,60 @@ function formatDate(d){
   return dt.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"});
 }
 
+/* =====================================================================
+   SCORECARD TOTAL BANGUN — logika perhitungan
+   1. Total Bangun          = jumlah baris proyek yang lolos filter (COUNTA)
+   2. Total SP3K Muncul     = jumlah baris di sumber "status bank" (CSV terpisah)
+                              yang kolom "Total SP3K" TIDAK KOSONG (COUNTIF)
+   3. % di sebelah SP3K Muncul
+                            = (jumlah baris proyek yang kolom status_bank TIDAK KOSONG)
+                              / Total SP3K Muncul (poin 2)
+   4. Total Ready Stock Muncul
+                            = SUM angka pada kolom "Total Ready Stock" di sumber
+                              "status bank". Kolom ini SUDAH berisi angka total
+                              jadi/siap (bukan penanda status per-baris), jadi
+                              di sini tinggal DIJUMLAHKAN — tidak di-COUNTIF, dan
+                              independen dari kolom Total SP3K.
+   5. % di sebelah Ready Stock Muncul
+                            = (jumlah baris proyek yang kolom status_bank KOSONG)
+                              / Total Ready Stock Muncul (poin 4)
+   6. Angka & % di bawah "170 unit" (breakdown SP3K / Ready Stock)
+                            = jumlah baris proyek per kategori status_bank, dibagi
+                              Total Bangun (total region/unit yang ada)
+===================================================================== */
+function renderScorecardBangun(data){
+  const totalBangun = data.length;
+  const projSp3kCount = data.filter(p=>p.statusBank !== "").length;
+  const projReadyCount = data.filter(p=>p.statusBank === "").length;
+
+  const bankSp3kMuncul = STATUS_BANK.filter(r=>r.totalSP3K !== "").length;
+  // Kolom "Total Ready Stock" sudah berisi angka jadi per baris -> tinggal dijumlahkan (SUM),
+  // bukan dihitung jumlah baris yang tidak kosong (COUNTIF).
+  const bankReadyMuncul = STATUS_BANK.reduce((sum,r)=> sum + (Number(r.totalReadyStock) || 0), 0);
+
+  const pctSp3kMuncul = bankSp3kMuncul ? (projSp3kCount / bankSp3kMuncul) * 100 : 0;
+  const pctReadyMuncul = bankReadyMuncul ? (projReadyCount / bankReadyMuncul) * 100 : 0;
+
+  const pctSp3kBottom = totalBangun ? (projSp3kCount / totalBangun) * 100 : 0;
+  const pctReadyBottom = totalBangun ? (projReadyCount / totalBangun) * 100 : 0;
+
+  document.getElementById("sbTotalBangun").textContent = totalBangun;
+
+  document.getElementById("sbSp3kCount").firstChild.textContent = projSp3kCount;
+  document.getElementById("sbSp3kPct").textContent = "/" + Math.round(pctSp3kBottom) + "%";
+  document.getElementById("sbReadyCount").firstChild.textContent = projReadyCount;
+  document.getElementById("sbReadyPct").textContent = "/" + Math.round(pctReadyBottom) + "%";
+
+  document.getElementById("sbSp3kMuncul").textContent = bankSp3kMuncul;
+  document.getElementById("sbSp3kMunculPct").textContent = Math.round(pctSp3kMuncul) + "%";
+  document.getElementById("sbReadyMuncul").textContent = bankReadyMuncul;
+  document.getElementById("sbReadyMunculPct").textContent = Math.round(pctReadyMuncul) + "%";
+}
+
 function render(){
   const data = getFiltered();
+
+  renderScorecardBangun(data);
 
   const totalBangun = data.length; // COUNTA: jumlah baris proyek (bernama) yang lolos filter aktif
   const avgDeviasi = data.length ? data.reduce((s,p)=>s+p.deviation,0)/data.length : 0;
@@ -713,10 +905,6 @@ function render(){
   // Total Progress = COUNTIF kolom "Status" di sheet yang bernilai "On Progress" (tidak peka huruf besar/kecil)
   const totalOngoing = data.filter(p=>p.stageNorm === "on progress").length;
   const ongoingRatio = totalBangun ? (totalOngoing/totalBangun)*100 : 0;
-
-  document.getElementById("kpiTotalBangun").textContent = totalBangun;
-  document.getElementById("kpiTotalBangunFoot").textContent = totalBangun===PROJECTS.length ? "seluruh proyek berjalan" : `dari ${PROJECTS.length} total proyek`;
-  document.getElementById("dialTotalBangun").textContent = totalBangun;
 
   document.getElementById("kpiProgress").textContent = totalOngoing;
   document.getElementById("kpiProgressFoot").textContent = totalBangun ? Math.round(ongoingRatio)+"% berstatus On Progress" : "tidak ada data";
@@ -1164,14 +1352,17 @@ document.getElementById("btnSync").addEventListener("click", async ()=>{
     setSyncInfo("Data karyawan disinkronkan · " + new Date().toLocaleTimeString("id-ID"));
   } else {
     PROJECTS = deriveFields(await loadData());
+    STATUS_BANK = await loadStatusBank();
     populateFilters();
     render();
+    setSyncInfo("Data proyek disinkronkan · " + new Date().toLocaleTimeString("id-ID"));
   }
 });
 
 // Auto-refresh data dari spreadsheet setiap 5 menit (opsional, hapus jika tidak perlu)
 setInterval(async ()=>{
   PROJECTS = deriveFields(await loadData());
+  STATUS_BANK = await loadStatusBank();
   render();
   EMPLOYEES = deriveEmployeeFields(await loadEmployeeData());
   renderEmployees();
