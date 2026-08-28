@@ -208,24 +208,24 @@
 
   /* ===== Scorecard: Average Cost Done Bangun ===== */
   .cost-scorecard{
-    background:var(--panel); border:1px solid var(--line); border-radius:14px;
-    padding:20px 24px; margin-bottom:20px;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:18px 20px 20px; margin-bottom:20px;
   }
   .cost-head{
     display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
-    margin-bottom:16px; flex-wrap:wrap;
+    margin-bottom:15px; flex-wrap:wrap;
   }
   .cost-title-wrap h2{
-    margin:0; font-size:16px; font-weight:800; color:var(--text);
-    letter-spacing:.15px;
+    margin:0 0 3px; font-size:14.5px; font-weight:800; color:var(--text);
+    line-height:1.25; letter-spacing:0;
   }
   .cost-title-wrap .cost-subtitle{
-    margin-top:3px; font-size:11px; color:var(--text-dim);
+    margin-top:0; font-size:11.5px; font-weight:400; line-height:1.4; color:var(--text-dim);
   }
   .cost-badge{
-    font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.45px;
+    font-size:10.5px; font-weight:700; text-transform:none; letter-spacing:.1px;
     color:#a45a00; background:#fff4e5; border:1px solid #ffd9ab;
-    padding:5px 9px; border-radius:999px;
+    padding:5px 9px; border-radius:999px; line-height:1.2;
   }
   .cost-layout{
     display:grid; grid-template-columns:minmax(0,1.08fr) minmax(350px,.92fr);
@@ -240,62 +240,62 @@
     background:var(--panel-2);
   }
   .cost-metric{
-    padding:14px 16px; min-width:0;
+    padding:14px 15px 15px; min-width:0;
     border-right:1px solid var(--line);
   }
   .cost-metric:last-child{border-right:none;}
   .cost-metric-label{
-    font-size:10.5px; font-weight:800; color:var(--text-dim);
-    text-transform:uppercase; letter-spacing:.55px; margin-bottom:6px;
+    font-size:10.5px; font-weight:700; color:var(--text-dim);
+    text-transform:uppercase; letter-spacing:.55px; margin-bottom:6px; line-height:1.2;
   }
   .cost-metric-value{
-    font-size:22px; line-height:1.15; font-weight:800; color:var(--text);
-    overflow-wrap:anywhere;
+    font-size:24px; line-height:1.08; font-weight:800; color:var(--text);
+    letter-spacing:-.25px; white-space:nowrap;
   }
   .cost-details{
     display:grid; grid-template-columns:1fr 1fr; gap:12px;
     margin-top:14px;
   }
   .cost-detail{
-    border:1px solid var(--line); border-radius:10px; padding:14px 15px;
+    border:1px solid var(--line); border-radius:10px; padding:13px 14px;
     min-width:0; background:var(--panel);
   }
   .cost-detail.top{border-left:4px solid var(--green);}
   .cost-detail.bottom{border-left:4px solid var(--red);}
   .cost-detail-label{
-    font-size:11px; font-weight:800; text-transform:uppercase;
-    letter-spacing:.45px; margin-bottom:7px;
+    font-size:10.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.45px; margin-bottom:6px; line-height:1.2;
   }
   .cost-detail.top .cost-detail-label{color:var(--green);}
   .cost-detail.bottom .cost-detail-label{color:var(--red);}
   .cost-detail-text{
-    font-size:13px; font-weight:700; color:var(--text); line-height:1.45;
+    font-size:12.5px; font-weight:700; color:var(--text); line-height:1.45;
     overflow-wrap:anywhere;
   }
   .cost-detail-meta{
-    font-size:10.5px; color:var(--text-dim); margin-top:4px;
+    font-size:10.5px; font-weight:400; line-height:1.35; color:var(--text-dim); margin-top:4px;
   }
   .cost-chart-card{
-    border:2px solid #f28a19; border-radius:24px;
-    padding:16px 18px 14px; min-width:0;
+    border:2px solid #f28a19; border-radius:20px;
+    padding:15px 17px 13px; min-width:0;
     display:flex; flex-direction:column; background:#fffdf9;
   }
   .cost-extremes{
     display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:8px;
   }
   .cost-extreme{
-    text-align:center; padding:2px 8px 8px;
+    text-align:center; padding:2px 8px 7px;
   }
   .cost-extreme:first-child{border-right:1px solid #f0e2d3;}
   .cost-extreme-label{
-    font-size:11px; font-weight:900; text-transform:uppercase;
-    letter-spacing:.5px; color:var(--text); margin-bottom:4px;
+    font-size:10.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.5px; color:var(--text-dim); margin-bottom:5px; line-height:1.2;
   }
   .cost-extreme-label .down{color:var(--green);}
   .cost-extreme-label .up{color:var(--red);}
   .cost-extreme-value{
-    font-size:18px; font-weight:800; color:var(--text);
-    overflow-wrap:anywhere;
+    font-size:22px; line-height:1.1; font-weight:800; color:var(--text);
+    letter-spacing:-.2px; white-space:nowrap;
   }
   .cost-chart-wrap{
     position:relative; height:190px; min-height:190px; margin-top:auto;
@@ -313,7 +313,7 @@
   }
   .cost-average-marker span{
     position:absolute; top:-18px; left:0; transform:translateX(-50%);
-    white-space:nowrap; font-size:9.5px; color:#667085;
+    white-space:nowrap; font-size:10px; font-weight:600; color:#667085;
     background:#fffdf9; padding:0 4px;
   }
   .cost-chart-row{
@@ -321,7 +321,7 @@
     gap:9px; align-items:center; margin:14px 0; position:relative; z-index:2;
   }
   .cost-row-label{
-    font-size:10.5px; font-weight:900; color:#4b5567; text-align:right;
+    font-size:10.5px; font-weight:700; letter-spacing:.35px; color:#4b5567; text-align:right;
   }
   .cost-bar-track{
     height:22px; border-radius:6px; background:#f3f4f6; overflow:hidden;
@@ -334,19 +334,19 @@
   .cost-bar-fill.top{background:var(--green);}
   .cost-bar-fill.bottom{background:var(--red);}
   .cost-row-value{
-    font-size:11px; font-weight:800; color:#4b5567; text-align:left; white-space:nowrap;
+    font-size:11.5px; font-weight:700; color:#4b5567; text-align:left; white-space:nowrap;
   }
   .cost-axis-scale{
     margin-left:67px; margin-right:67px; display:flex; justify-content:space-between;
-    font-size:9.5px; color:#98a2b3; border-top:1px solid #ebeef2; padding-top:5px;
+    font-size:10px; font-weight:400; color:#98a2b3; border-top:1px solid #ebeef2; padding-top:5px;
   }
   .cost-chart-empty{
     min-height:150px; display:flex; align-items:center; justify-content:center;
     text-align:center; color:var(--text-dim); font-size:12px; padding:20px;
   }
   .cost-chart-note{
-    margin-top:5px; text-align:center; font-size:10.5px;
-    color:var(--text-dim); font-style:italic;
+    margin-top:5px; text-align:center; font-size:10.5px; font-weight:400; line-height:1.35;
+    color:var(--text-dim); font-style:normal;
   }
   .cost-empty{
     display:flex; align-items:center; justify-content:center; min-height:150px;
