@@ -376,7 +376,7 @@
     letter-spacing:0; font-style:italic;
   }
   .quality-details{grid-template-columns:1fr;}
-  .quality-detail-text{font-size:12.5px;}
+  .quality-detail-text{font-size:12.5px; line-height:1.55; white-space:pre-line;}
   .quality-extreme-value{
     font-size:20px; line-height:1.1; font-weight:800; color:var(--text);
     letter-spacing:-.15px; white-space:nowrap;
@@ -756,7 +756,7 @@
               <div class="cost-detail bottom">
                 <div class="cost-detail-label">Bottom Actual AFS</div>
                 <div class="cost-detail-text quality-detail-text" id="qualityBottomDetail">Tidak ada data</div>
-                <div class="cost-detail-meta">Proyek selesai dengan AFS &gt; 1; ditampilkan nilai AFS tertinggi</div>
+                <div class="cost-detail-meta">Proyek selesai dengan AFS &gt; 0; jika nilai tertinggi sama, semua proyek ditampilkan</div>
               </div>
             </div>
           </div>
@@ -1608,8 +1608,9 @@ function renderCostChart(topIndex, bottomIndex){
    Pencapaian       = inverse score untuk KPI target 0 (lower-is-better):
                       100 / (1 + AVG Actual AFS).
                       AVG 0 = 100%; semakin kecil actual semakin tinggi skor.
-   Bottom Actual AFS= proyek selesai dengan AFS > 1, ambil nilai tertinggi
-                      lalu tampilkan Region | Name | AFS
+   Bottom Actual AFS= proyek selesai dengan AFS > 0, ambil nilai tertinggi.
+                      Jika beberapa proyek memiliki nilai tertinggi yang sama,
+                      tampilkan semuanya sebagai Region | Name | AFS
    TOP              = MIN AFS pada proyek selesai
    BOTTOM           = MAX AFS pada proyek selesai
    Chart            = MIN vs MAX AFS dengan batas/baseline 0 AFS
@@ -1635,13 +1636,18 @@ function renderQualityScorecard(data){
     ? afsRows.reduce((best,p)=>p.afs > best.afs ? p : best)
     : null;
 
-  // Sesuai requirement Bottom Actual AFS: hanya AFS > 1.
-  // Jika lebih dari satu proyek memenuhi, tampilkan yang AFS-nya paling tinggi
-  // agar konsisten dengan definisi BOTTOM pada chart.
-  const bottomActualCandidates = afsRows.filter(p => p.afs > 1);
-  const bottomActualRow = bottomActualCandidates.length
-    ? bottomActualCandidates.reduce((best,p)=>p.afs > best.afs ? p : best)
+  // Bottom Actual AFS: ambil HANYA proyek selesai dengan AFS > 0.
+  // Nilai 1 AFS termasuk karena lebih besar dari target/baseline 0.
+  // Cari nilai AFS tertinggi (BOTTOM), lalu tampilkan SEMUA proyek yang
+  // memiliki nilai tertinggi yang sama. Contoh: jika dua proyek sama-sama
+  // memiliki 1 AFS dan itu merupakan nilai maksimum, keduanya ditampilkan.
+  const bottomActualCandidates = afsRows.filter(p => p.afs > 0);
+  const bottomActualMax = bottomActualCandidates.length
+    ? Math.max(...bottomActualCandidates.map(p => p.afs))
     : null;
+  const bottomActualRows = Number.isFinite(bottomActualMax)
+    ? bottomActualCandidates.filter(p => Math.abs(p.afs - bottomActualMax) < 1e-9)
+    : [];
 
   // Pencapaian AFS memakai logika inverse / lower-is-better:
   // - AVG Actual AFS = 0  -> 100%
@@ -1663,9 +1669,11 @@ function renderQualityScorecard(data){
   document.getElementById("qualityTopValue").textContent = topRow ? formatAfs(topRow.afs, true) : "—";
   document.getElementById("qualityBottomValue").textContent = bottomRow ? formatAfs(bottomRow.afs, true) : "—";
 
-  document.getElementById("qualityBottomDetail").textContent = bottomActualRow
-    ? `${bottomActualRow.region || "Tanpa Wilayah"} | ${bottomActualRow.name || "Tanpa Nama"} | ${formatAfs(bottomActualRow.afs, true)}`
-    : "Tidak ada proyek selesai dengan AFS > 1";
+  document.getElementById("qualityBottomDetail").textContent = bottomActualRows.length
+    ? bottomActualRows
+        .map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatAfs(p.afs, true)}`)
+        .join("\n")
+    : "Tidak ada proyek selesai dengan AFS > 0";
 
   renderQualityChart(topRow ? topRow.afs : null, bottomRow ? bottomRow.afs : null);
 }
