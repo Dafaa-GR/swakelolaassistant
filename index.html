@@ -4,8 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Swakelola — Monitor Center</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<!--
+  PERBAIKAN PERFORMA: dulu Chart.js & PapaParse dimuat lewat <script src="..."> di sini,
+  di dalam <head>, TANPA atribut defer/async. Itu membuat browser WAJIB selesai
+  mengunduh KEDUA file dari CDN dulu sebelum boleh melanjutkan proses apa pun —
+  termasuk mem-parsing <style> dan menampilkan HTML di bawahnya. Jadi seluruh halaman
+  terlihat kosong/putih sampai kedua library itu selesai diunduh (inilah penyebab
+  utama dashboard "lama sekali muncul").
+  Sekarang: cukup buka koneksi & mulai unduh di background lebih awal (baris di bawah),
+  sementara <script src> yang SEBENARNYA dipindah ke akhir <body> (tepat sebelum kode
+  yang memakainya) sehingga tidak lagi menghalangi tampilan awal halaman.
+-->
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://docs.google.com">
+<link rel="dns-prefetch" href="https://docs.google.com">
+<link rel="preload" as="script" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js">
+<link rel="preload" as="script" href="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js">
 <style>
   :root{
     --bg:#f2f4f8;
@@ -747,6 +761,12 @@
   </div>
 </div>
 
+<!-- Dipindah dari <head>: sekarang browser sudah sempat merender seluruh halaman
+     (sidebar, filter, panel kosong dengan "0") sebelum jeda singkat mengunduh
+     kedua library ini — karena sudah di-preload lebih awal, biasanya sudah ada
+     di cache browser saat baris ini tercapai, jadi jedanya nyaris tak terasa. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
 /* =====================================================================
    KONEKSI KE GOOGLE SHEETS — DATA PROYEK
@@ -1685,8 +1705,9 @@ document.getElementById("btnSync").addEventListener("click", async ()=>{
     renderEmployees();
     setSyncInfo("Data karyawan disinkronkan · " + new Date().toLocaleTimeString("id-ID"));
   } else {
-    PROJECTS = deriveFields(await loadData());
-    STATUS_BANK = await loadStatusBank();
+    const [liveProjects, liveStatusBank] = await Promise.all([loadData(), loadStatusBank()]);
+    PROJECTS = deriveFields(liveProjects);
+    STATUS_BANK = liveStatusBank;
     populateFilters();
     render();
     setSyncInfo("Data proyek disinkronkan · " + new Date().toLocaleTimeString("id-ID"));
@@ -1695,10 +1716,15 @@ document.getElementById("btnSync").addEventListener("click", async ()=>{
 
 // Auto-refresh data dari spreadsheet setiap 5 menit (opsional, hapus jika tidak perlu)
 setInterval(async ()=>{
-  PROJECTS = deriveFields(await loadData());
-  STATUS_BANK = await loadStatusBank();
+  const [liveProjects, liveStatusBank, liveEmployees] = await Promise.all([
+    loadData(),
+    loadStatusBank(),
+    loadEmployeeData()
+  ]);
+  PROJECTS = deriveFields(liveProjects);
+  STATUS_BANK = liveStatusBank;
   render();
-  EMPLOYEES = deriveEmployeeFields(await loadEmployeeData());
+  EMPLOYEES = deriveEmployeeFields(liveEmployees);
   renderEmployees();
 }, 5 * 60 * 1000);
 
@@ -1711,9 +1737,16 @@ async function boot(){
   renderTrendChart();
   render();
 
-  // 2. Ambil data asli di latar belakang
-  const liveProjects = await loadData();
-  const liveStatusBank = await loadStatusBank();
+  // 2. Ambil data asli di latar belakang — KEDUA sumber diambil BERSAMAAN lewat
+  //    Promise.all, bukan satu-per-satu (await ... lalu await ...). Dulu, kalau
+  //    tiap fetch ke Google Sheets makan waktu ~1-2 detik, totalnya bisa 2x lipat
+  //    karena fetch kedua baru mulai setelah fetch pertama selesai. Sekarang
+  //    keduanya jalan bersamaan, jadi total waktu tunggu = fetch yang PALING LAMA,
+  //    bukan JUMLAH keduanya.
+  const [liveProjects, liveStatusBank] = await Promise.all([
+    loadData(),
+    loadStatusBank()
+  ]);
 
   // 3. Timpa dan render ulang jika berhasil mengambil data asli
   PROJECTS = deriveFields(liveProjects);
