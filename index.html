@@ -1605,9 +1605,9 @@ function renderCostChart(topIndex, bottomIndex){
 
    Target AFS       = 0 (tetap)
    AVG Actual AFS   = AVERAGE header "afs" pada proyek selesai
-   Pencapaian       = 0 / AVG Actual AFS. Karena 0/0 tidak terdefinisi,
-                      kondisi AVG Actual AFS = 0 ditampilkan 100% agar sesuai
-                      kondisi target 0 tercapai; jika AVG > 0 hasilnya 0%.
+   Pencapaian       = inverse score untuk KPI target 0 (lower-is-better):
+                      100 / (1 + AVG Actual AFS).
+                      AVG 0 = 100%; semakin kecil actual semakin tinggi skor.
    Bottom Actual AFS= proyek selesai dengan AFS > 1, ambil nilai tertinggi
                       lalu tampilkan Region | Name | AFS
    TOP              = MIN AFS pada proyek selesai
@@ -1643,9 +1643,16 @@ function renderQualityScorecard(data){
     ? bottomActualCandidates.reduce((best,p)=>p.afs > best.afs ? p : best)
     : null;
 
+  // Pencapaian AFS memakai logika inverse / lower-is-better:
+  // - AVG Actual AFS = 0  -> 100%
+  // - semakin kecil AVG Actual AFS, semakin tinggi pencapaiannya
+  // - semakin besar AVG Actual AFS, semakin turun pencapaiannya
+  // Rumus: 100 / (1 + AVG Actual AFS)
+  // Contoh: 0 = 100%, 0,25 = 80%, 0,5 = 66,7%, 1 = 50%, 2 = 33,3%.
   let achievementPct = null;
   if(Number.isFinite(avgAfs)){
-    achievementPct = avgAfs === 0 ? 100 : (0 / avgAfs) * 100;
+    const safeAvgAfs = Math.max(0, avgAfs);
+    achievementPct = 100 / (1 + safeAvgAfs);
   }
 
   document.getElementById("qualityDoneCount").textContent = `${done.length} proyek selesai`;
