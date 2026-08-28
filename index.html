@@ -909,7 +909,8 @@ async function loadData(){
     return DEMO_PROJECTS;
   }
   try{
-    const bust = (SHEET_CSV_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
+    // Perubahan Cache Buster
+    const bust = (SHEET_CSV_URL.includes("?") ? "&" : "?") + "t=" + Math.floor(Date.now() / 60000);
     const res = await fetch(SHEET_CSV_URL + bust);
     if(!res.ok) throw new Error("HTTP " + res.status);
     const text = await res.text();
@@ -943,7 +944,8 @@ async function loadStatusBank(){
     return DEMO_STATUS_BANK;
   }
   try{
-    const bust = (STATUS_BANK_CSV_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
+    // Perubahan Cache Buster
+    const bust = (STATUS_BANK_CSV_URL.includes("?") ? "&" : "?") + "t=" + Math.floor(Date.now() / 60000);
     const res = await fetch(STATUS_BANK_CSV_URL + bust);
     if(!res.ok) throw new Error("HTTP " + res.status);
     const text = await res.text();
@@ -992,14 +994,6 @@ function populateFilters(){
   pics.forEach(p=>{ const o=document.createElement("option"); o.value=p; o.textContent=p; fPic.appendChild(o); });
   if(regions.some(r=>normRegion(r)===normRegion(curRegion))) fRegion.value = curRegion;
   if(pics.includes(curPic)) fPic.value = curPic;
-}
-
-async function boot(){
-  PROJECTS = deriveFields(await loadData());
-  STATUS_BANK = await loadStatusBank();
-  populateFilters();
-  renderTrendChart();
-  render();
 }
 
 function getFiltered(){
@@ -1407,7 +1401,8 @@ let echarts = {};
 async function loadEmployeeData(){
   if(!EMPLOYEE_SHEET_CSV_URL){ return DEMO_EMPLOYEES; }
   try{
-    const bust = (EMPLOYEE_SHEET_CSV_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
+    // Perubahan Cache Buster
+    const bust = (EMPLOYEE_SHEET_CSV_URL.includes("?") ? "&" : "?") + "t=" + Math.floor(Date.now() / 60000);
     const res = await fetch(EMPLOYEE_SHEET_CSV_URL + bust);
     if(!res.ok) throw new Error("HTTP " + res.status);
     const text = await res.text();
@@ -1608,8 +1603,19 @@ function renderEmployeeTrendChart(){
   });
 }
 
+// Perubahan Fungsi bootEmployees()
 async function bootEmployees(){
-  EMPLOYEES = deriveEmployeeFields(await loadEmployeeData());
+  // 1. Render data dummy (instan)
+  EMPLOYEES = deriveEmployeeFields(DEMO_EMPLOYEES);
+  populateEmployeeFilters();
+  renderEmployeeTrendChart();
+  renderEmployees();
+
+  // 2. Ambil data asli di latar belakang
+  const liveEmployees = await loadEmployeeData();
+
+  // 3. Timpa dan render ulang jika berhasil mengambil data asli
+  EMPLOYEES = deriveEmployeeFields(liveEmployees);
   populateEmployeeFilters();
   renderEmployeeTrendChart();
   renderEmployees();
@@ -1695,6 +1701,27 @@ setInterval(async ()=>{
   EMPLOYEES = deriveEmployeeFields(await loadEmployeeData());
   renderEmployees();
 }, 5 * 60 * 1000);
+
+// Perubahan Fungsi boot()
+async function boot(){
+  // 1. Render data dummy (instan)
+  PROJECTS = deriveFields(DEMO_PROJECTS);
+  STATUS_BANK = DEMO_STATUS_BANK;
+  populateFilters();
+  renderTrendChart();
+  render();
+
+  // 2. Ambil data asli di latar belakang
+  const liveProjects = await loadData();
+  const liveStatusBank = await loadStatusBank();
+
+  // 3. Timpa dan render ulang jika berhasil mengambil data asli
+  PROJECTS = deriveFields(liveProjects);
+  STATUS_BANK = liveStatusBank;
+  populateFilters();
+  renderTrendChart();
+  render();
+}
 
 boot();
 bootEmployees();
