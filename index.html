@@ -259,6 +259,49 @@
   .page{display:block;}
   .page.page-hidden{display:none;}
 
+  /* ===== Scorecard: Average Cost (RAB vs Pemakaian, Top/Bottom Actual Cost) ===== */
+  .scorecard-cost{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:20px 24px; margin-bottom:16px;
+  }
+  .cost-title{text-align:center; margin-bottom:16px;}
+  .cost-title h2{font-size:17px; margin:0; font-weight:700; letter-spacing:.3px; color:var(--text);}
+  .cost-sub{font-size:11px; font-weight:500; font-style:italic; color:#5a6478; margin-top:3px; letter-spacing:.2px;}
+  .cost-body{display:flex; gap:24px; align-items:stretch; flex-wrap:wrap;}
+  .cost-left{flex:1.3; min-width:280px; display:flex; flex-direction:column;}
+  .cost-left-top{display:flex; align-items:flex-start; gap:22px;}
+  .cost-stat{display:flex; flex-direction:column; min-width:0;}
+  .cost-stat-label{font-size:10.5px; font-weight:400; color:#8a94a6; margin-bottom:5px; white-space:nowrap;}
+  .cost-stat-value{font-size:18px; font-weight:700; color:var(--text); white-space:nowrap; letter-spacing:.1px;}
+  .cost-stat-pct .cost-stat-value{font-size:16px; font-weight:700; font-style:italic; color:#4b5567;}
+  .cost-divider{width:1px; align-self:stretch; background:var(--line); flex-shrink:0; margin-top:2px;}
+  .cost-hr{height:1px; background:var(--line); margin:14px 0;}
+  .cost-actual-block{margin-bottom:12px;}
+  .cost-actual-label{font-size:11.5px; font-weight:500; margin-bottom:3px;}
+  .cost-top-label{color:var(--green);}
+  .cost-bottom-label{color:var(--red);}
+  .cost-actual-detail{font-size:12.5px; font-weight:700; color:var(--text); line-height:1.4; letter-spacing:0;}
+  .cost-right{
+    flex:1; min-width:280px;
+    border:2px solid var(--hazard); border-radius:16px;
+    padding:14px 18px 10px; display:flex; flex-direction:column;
+  }
+  .cost-right-header{display:flex; justify-content:space-around; text-align:center; margin-bottom:6px;}
+  .cost-right-label{
+    display:flex; align-items:center; justify-content:center; gap:4px;
+    font-size:12.5px; font-weight:700; color:var(--text); margin-bottom:4px; letter-spacing:.2px;
+  }
+  .cost-arrow{display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .cost-arrow svg{display:block; width:12px; height:12px;}
+  .cost-right-value{font-size:13.5px; font-weight:700; color:#4b5567; letter-spacing:0;}
+  .cost-chart-box{position:relative; flex:1; min-height:160px; width:100%; overflow:hidden;}
+  .cost-chart-caption{text-align:center; font-size:10px; font-weight:400; font-style:italic; color:var(--text-dim); margin-top:6px;}
+  @media (max-width:700px){
+    .scorecard-cost{padding:16px 14px;}
+    .cost-body{flex-direction:column;}
+    .cost-divider{width:auto; height:1px; align-self:stretch; margin:8px 0;}
+  }
+
   /* ===== Responsive ===== */
   @media (max-width:1100px){
     .row-2col{grid-template-columns:1fr;}
@@ -446,6 +489,65 @@
             <div class="k-label">Potential Late</div>
             <div class="k-value" id="kpiLate">0</div>
             <div class="k-foot" id="kpiLateFoot">proyek berisiko</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Scorecard: Average Cost (RAB vs Pemakaian + Top/Bottom Actual Cost) ===== -->
+      <div class="scorecard-cost" id="scorecardCost">
+        <div class="cost-title">
+          <h2>AVERAGE COST</h2>
+          <div class="cost-sub">DONE BANGUN</div>
+        </div>
+        <div class="cost-body">
+          <div class="cost-left">
+            <div class="cost-left-top">
+              <div class="cost-stat">
+                <div class="cost-stat-label">RAB</div>
+                <div class="cost-stat-value" id="costRab">Rp0</div>
+              </div>
+              <div class="cost-divider"></div>
+              <div class="cost-stat">
+                <div class="cost-stat-label">PEMAKAIAN</div>
+                <div class="cost-stat-value" id="costPemakaian">Rp0</div>
+              </div>
+              <div class="cost-divider"></div>
+              <div class="cost-stat cost-stat-pct">
+                <div class="cost-stat-label">%</div>
+                <div class="cost-stat-value" id="costPct">0%</div>
+              </div>
+            </div>
+            <div class="cost-hr"></div>
+            <div class="cost-actual-block">
+              <div class="cost-actual-label cost-top-label">TOP Actual Cost</div>
+              <div class="cost-actual-detail" id="costTopDetail">Tidak ada data</div>
+            </div>
+            <div class="cost-actual-block">
+              <div class="cost-actual-label cost-bottom-label">BOTTOM Actual Cost</div>
+              <div class="cost-actual-detail" id="costBottomDetail">Tidak ada data</div>
+            </div>
+          </div>
+          <div class="cost-right">
+            <div class="cost-right-header">
+              <div class="cost-stat">
+                <div class="cost-right-label">TOP
+                  <span class="cost-arrow cost-arrow-up">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1f9d63" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+                  </span>
+                </div>
+                <div class="cost-right-value" id="costTopValue">Rp0</div>
+              </div>
+              <div class="cost-stat">
+                <div class="cost-right-label">BOTTOM
+                  <span class="cost-arrow cost-arrow-down">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#e0483a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></svg>
+                  </span>
+                </div>
+                <div class="cost-right-value" id="costBottomValue">Rp0</div>
+              </div>
+            </div>
+            <div class="cost-chart-box"><canvas id="chartCost"></canvas></div>
+            <div class="cost-chart-caption">dari rata - rata pemakaian</div>
           </div>
         </div>
       </div>
@@ -690,18 +792,18 @@ const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9
 const STATUS_BANK_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9mAuPr0hWTRnspZRKdmDlDS6BtiJ8BBrrq4Ay1mEjbYc2Qfze76VpXKSEs3gz3yw9ZYkY71/pub?gid=1125246992&single=true&output=csv";
 
 const DEMO_PROJECTS = [
-  {name:"Gedung Perkantoran Menara A", region:"Jakarta", pic:"Rudi Santoso", planned:80, actual:74, deadline:"2026-10-15", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
-  {name:"Perumahan Griya Asri Blok C", region:"Bekasi", pic:"Siti Aminah", planned:65, actual:66, deadline:"2026-11-02", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
-  {name:"Rusun Pekerja Cikarang", region:"Bekasi", pic:"Bambang Wijaya", planned:50, actual:34, deadline:"2026-09-20", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:""},
-  {name:"Pabrik Manufaktur Blok D", region:"Karawang", pic:"Rudi Santoso", planned:90, actual:91, deadline:"2026-09-05", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
-  {name:"Gudang Logistik Terpadu", region:"Cikampek", pic:"Dewi Lestari", planned:40, actual:28, deadline:"2026-12-10", stage:"Belum Mulai", statusBank:"", actualProg:"", ontime:""},
-  {name:"Mall Sentosa Extension", region:"Jakarta", pic:"Dewi Lestari", planned:70, actual:69, deadline:"2026-10-30", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
-  {name:"Apartemen Green Tower B", region:"Bandung", pic:"Bambang Wijaya", planned:55, actual:41, deadline:"2026-09-25", stage:"On Progress", statusBank:"Proses", actualProg:"Berpotensi Telat", ontime:""},
-  {name:"Rumah Sakit Cabang Timur", region:"Bandung", pic:"Siti Aminah", planned:30, actual:29, deadline:"2027-01-15", stage:"Belum Mulai", statusBank:"", actualProg:"", ontime:""},
-  {name:"Sekolah Terpadu Wilayah 2", region:"Bogor", pic:"Rudi Santoso", planned:85, actual:79, deadline:"2026-09-18", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Tidak Ada"},
-  {name:"Jembatan Penghubung Cikarang", region:"Bekasi", pic:"Dewi Lestari", planned:45, actual:22, deadline:"2026-09-10", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:""},
-  {name:"Kantor Cabang Bogor", region:"Bogor", pic:"Bambang Wijaya", planned:95, actual:96, deadline:"2026-08-30", stage:"Selesai", statusBank:"Approved", actualProg:"", ontime:""},
-  {name:"Terminal Distribusi Barat", region:"Karawang", pic:"Siti Aminah", planned:60, actual:52, deadline:"2026-11-20", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:""},
+  {name:"Gedung Perkantoran Menara A", region:"Jakarta", pic:"Rudi Santoso", planned:80, actual:74, deadline:"2026-10-15", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya", budgetTarget:55484392, budgetAct:53200000},
+  {name:"Perumahan Griya Asri Blok C", region:"Bekasi", pic:"Siti Aminah", planned:65, actual:66, deadline:"2026-11-02", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya", budgetTarget:48000000, budgetAct:49500000},
+  {name:"Rusun Pekerja Cikarang", region:"Bekasi", pic:"Bambang Wijaya", planned:50, actual:34, deadline:"2026-09-20", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:"", budgetTarget:40000000, budgetAct:0},
+  {name:"Pabrik Manufaktur Blok D", region:"Karawang", pic:"Rudi Santoso", planned:90, actual:91, deadline:"2026-09-05", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya", budgetTarget:62000000, budgetAct:64318000},
+  {name:"Gudang Logistik Terpadu", region:"Cikampek", pic:"Dewi Lestari", planned:40, actual:28, deadline:"2026-12-10", stage:"Belum Mulai", statusBank:"", actualProg:"", ontime:"", budgetTarget:35000000, budgetAct:0},
+  {name:"Mall Sentosa Extension", region:"Jakarta", pic:"Dewi Lestari", planned:70, actual:69, deadline:"2026-10-30", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya", budgetTarget:58000000, budgetAct:56750000},
+  {name:"Apartemen Green Tower B", region:"Bandung", pic:"Bambang Wijaya", planned:55, actual:41, deadline:"2026-09-25", stage:"On Progress", statusBank:"Proses", actualProg:"Berpotensi Telat", ontime:"", budgetTarget:51000000, budgetAct:52300000},
+  {name:"Rumah Sakit Cabang Timur", region:"Bandung", pic:"Siti Aminah", planned:30, actual:29, deadline:"2027-01-15", stage:"Belum Mulai", statusBank:"", actualProg:"", ontime:"", budgetTarget:45000000, budgetAct:0},
+  {name:"Sekolah Terpadu Wilayah 2", region:"Bogor", pic:"Rudi Santoso", planned:85, actual:79, deadline:"2026-09-18", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Tidak Ada", budgetTarget:53000000, budgetAct:54900000},
+  {name:"Jembatan Penghubung Cikarang", region:"Bekasi", pic:"Dewi Lestari", planned:45, actual:22, deadline:"2026-09-10", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:"", budgetTarget:38000000, budgetAct:0},
+  {name:"Kantor Cabang Bogor", region:"Bogor", pic:"Bambang Wijaya", planned:95, actual:96, deadline:"2026-08-30", stage:"Selesai", statusBank:"Approved", actualProg:"", ontime:"", budgetTarget:60000000, budgetAct:48056392},
+  {name:"Terminal Distribusi Barat", region:"Karawang", pic:"Siti Aminah", planned:60, actual:52, deadline:"2026-11-20", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:"", budgetTarget:44000000, budgetAct:46200000},
 ];
 
 // Data contoh sumber "status bank" (sheet/csv terpisah dari data proyek di atas)
@@ -746,6 +848,22 @@ function normalizeFlag(val){
   return v;
 }
 
+// Membersihkan nilai angka dari CSV yang mungkin berformat "Rp55.484.392" / "55,484,392"
+// menjadi Number murni. Sel kosong/tidak valid -> NaN (bukan 0), supaya tidak
+// tercampur dengan nilai 0 yang sengaja diisi di kolom "budget act".
+function parseMoneyNumber(val){
+  if(val === null || val === undefined || val === "") return NaN;
+  if(typeof val === "number") return val;
+  const cleaned = val.toString().replace(/[^0-9.-]/g, "");
+  if(cleaned === "" || cleaned === "-") return NaN;
+  return Number(cleaned);
+}
+
+function formatRupiah(num){
+  if(!isFinite(num)) num = 0;
+  return "Rp" + Math.round(num).toLocaleString("id-ID");
+}
+
 function deriveFields(list){
   list.forEach(p=>{
     p.planned = Number(p.planned) || 0;
@@ -776,6 +894,11 @@ function deriveFields(list){
     // Tidak kosong = proyek (yang sedang On Progress) berjalan tepat waktu -> KPI "On Track".
     // Nilai seperti "Tidak Ada" dianggap SAMA DENGAN KOSONG (lihat normalizeFlag/EMPTY_FLAG_VALUES) -> TIDAK dihitung.
     p.ontime = normalizeFlag(p.ontime);
+    // "budgetTarget" = kolom "budget target" di CSV PROYEK -> dipakai untuk RAB (rata-rata) pada
+    // scorecard Average Cost. "budgetAct" = kolom "budget act" -> dipakai untuk Pemakaian
+    // (rata-rata), serta nilai TOP (min > 0) dan BOTTOM (max) pada scorecard yang sama.
+    p.budgetTarget = parseMoneyNumber(p.budgetTarget);
+    p.budgetAct = parseMoneyNumber(p.budgetAct);
   });
   return list;
 }
@@ -802,6 +925,8 @@ async function loadData(){
       statusBank: (row.status_bank || row["Status Bank"] || row.statusBank || row["status bank"] || "").toString().trim(),
       actualProg: (row["actual prog."] || row["Actual Prog."] || row["actual prog"] || row["Actual Prog"] || row.actualProg || "").toString().trim(),
       ontime: (row.ontime || row.Ontime || row["On Time"] || row["on time"] || row.OnTime || "").toString().trim(),
+      budgetTarget: (row["budget target"] || row["Budget Target"] || row.budgetTarget || row["Budget target"] || "").toString().trim(),
+      budgetAct: (row["budget act"] || row["Budget Act"] || row.budgetAct || row["budget actual"] || row["Budget Actual"] || "").toString().trim(),
     })).filter(p=>p.name);
     if(!mapped.length) throw new Error("Sheet kosong atau kolom tidak sesuai");
     setSyncInfo("Terhubung ke Google Sheets · " + new Date().toLocaleTimeString("id-ID"));
@@ -960,6 +1085,126 @@ function renderScorecardBangun(data){
 }
 
 /* =====================================================================
+   SCORECARD AVERAGE COST — logika perhitungan
+   Sumber data: CSV PROYEK, kolom "budget target" & "budget act".
+   Semua nilai dihitung dari `data` (hasil getFiltered()), jadi otomatis
+   ikut filter Wilayah & PIC yang sedang aktif.
+
+   1. RAB         = rata-rata (AVERAGE) kolom "budget target"
+   2. Pemakaian   = rata-rata (AVERAGE) kolom "budget act"
+   3. %           = Pemakaian / RAB
+   4. TOP         = nilai MIN pada kolom "budget act", TAPI baris dengan
+                    nilai 0 (atau kosong) pada "budget act" DIABAIKAN —
+                    hanya ambil nilai yang lebih besar dari 0
+   5. BOTTOM      = nilai MAX pada kolom "budget act" (baris 0 tetap ikut
+                    dipertimbangkan di sisi max, karena bukan aturan MIN)
+   6. Chart TOP   = nilai MIN (poin 4) dibagi Pemakaian (poin 2) -> %
+   7. Chart BOTTOM= nilai MAX (poin 5) dibagi Pemakaian (poin 2) -> %
+   8. TOP Actual Cost    = region | nama proyek | budget act, dari baris
+                           yang menghasilkan nilai MIN (poin 4)
+   9. BOTTOM Actual Cost = region | nama proyek | budget act, dari baris
+                           yang menghasilkan nilai MAX (poin 5)
+===================================================================== */
+function renderScorecardCost(data){
+  const validTarget = data.filter(p=>typeof p.budgetTarget === "number" && !isNaN(p.budgetTarget));
+  const validAct = data.filter(p=>typeof p.budgetAct === "number" && !isNaN(p.budgetAct));
+
+  const rab = validTarget.length ? validTarget.reduce((s,p)=>s+p.budgetTarget,0)/validTarget.length : 0;
+  const pemakaian = validAct.length ? validAct.reduce((s,p)=>s+p.budgetAct,0)/validAct.length : 0;
+  const pct = rab ? (pemakaian/rab)*100 : 0;
+
+  // TOP (min): abaikan baris dengan budget act 0/kosong, hanya ambil > 0
+  const candidatesForMin = validAct.filter(p=>p.budgetAct > 0);
+  // BOTTOM (max): tetap pakai seluruh baris yang punya angka valid
+  const candidatesForMax = validAct;
+
+  const topProj = candidatesForMin.length
+    ? candidatesForMin.reduce((min,p)=> p.budgetAct < min.budgetAct ? p : min, candidatesForMin[0])
+    : null;
+  const bottomProj = candidatesForMax.length
+    ? candidatesForMax.reduce((max,p)=> p.budgetAct > max.budgetAct ? p : max, candidatesForMax[0])
+    : null;
+
+  const topVal = topProj ? topProj.budgetAct : 0;
+  const bottomVal = bottomProj ? bottomProj.budgetAct : 0;
+
+  const topRatio = pemakaian ? (topVal/pemakaian)*100 : 0;
+  const bottomRatio = pemakaian ? (bottomVal/pemakaian)*100 : 0;
+
+  document.getElementById("costRab").textContent = formatRupiah(rab);
+  document.getElementById("costPemakaian").textContent = formatRupiah(pemakaian);
+  document.getElementById("costPct").textContent = Math.round(pct) + "%";
+
+  document.getElementById("costTopValue").textContent = formatRupiah(topVal);
+  document.getElementById("costBottomValue").textContent = formatRupiah(bottomVal);
+
+  document.getElementById("costTopDetail").textContent = topProj
+    ? `${topProj.region} | ${topProj.name} | ${formatRupiah(topProj.budgetAct)}`
+    : "Tidak ada data";
+  document.getElementById("costBottomDetail").textContent = bottomProj
+    ? `${bottomProj.region} | ${bottomProj.name} | ${formatRupiah(bottomProj.budgetAct)}`
+    : "Tidak ada data";
+
+  updateCostChart(topRatio, bottomRatio);
+}
+
+// Plugin kecil untuk menampilkan angka % langsung di atas tiap bar (TOP/BOTTOM),
+// jadi nilainya tetap terbaca tanpa perlu hover ke chart.
+const costBarLabelPlugin = {
+  id: "costBarLabelPlugin",
+  afterDatasetsDraw(chart){
+    const {ctx} = chart;
+    chart.getDatasetMeta(0).data.forEach((bar, i)=>{
+      const val = chart.data.datasets[0].data[i];
+      ctx.save();
+      ctx.fillStyle = "#333d4d";
+      ctx.font = "700 12px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillText(val + "%", bar.x, bar.y - 6);
+      ctx.restore();
+    });
+  }
+};
+
+// Chart mini di dalam kotak orange (TOP vs BOTTOM), berisi 2 bar:
+//   - Bar TOP    = nilai MIN pada kolom "budget act" (>0) DIBAGI Pemakaian (rata-rata "budget act") -> %
+//   - Bar BOTTOM = nilai MAX pada kolom "budget act" DIBAGI Pemakaian (rata-rata "budget act") -> %
+// topRatio & bottomRatio yang diterima di sini SUDAH dihitung sesuai rumus itu (lihat renderScorecardCost).
+function updateCostChart(topRatio, bottomRatio){
+  if(charts.cost) charts.cost.destroy();
+  // Beri ruang ekstra di atas bar tertinggi supaya label % dan bar tidak terpotong
+  // oleh tepi kotak orange (chart tetap "seukuran" pas di dalam .cost-chart-box).
+  const highest = Math.max(topRatio, bottomRatio, 10);
+  const suggestedMax = Math.ceil((highest * 1.3) / 10) * 10;
+  charts.cost = new Chart(document.getElementById("chartCost"), {
+    type:"bar",
+    data:{
+      labels:["TOP","BOTTOM"],
+      datasets:[{
+        data:[+topRatio.toFixed(1), +bottomRatio.toFixed(1)],
+        backgroundColor:["#1f9d63","#e0483a"],
+        borderRadius:6,
+        maxBarThickness:56,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ top:22 } },
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:(ctx)=> ctx.parsed.y + "% dari rata-rata pemakaian"}}
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:12, weight:"700"}, color:"#4b5567"}},
+        y:{beginAtZero:true, suggestedMax, ticks:{callback:v=>v+"%", font:{size:10}, color:"#667085"}, grid:{color:"#edf0f5"}}
+      }
+    },
+    plugins:[costBarLabelPlugin]
+  });
+}
+
+/* =====================================================================
    TIGA SCORECARD KPI ATAS (Total Progress / On Track / Potential Late)
    - Total Progress  = COUNTIF kolom "Status/stage" bernilai "On Progress"
                        (relatif terhadap seluruh proyek yang lolos filter aktif)
@@ -974,6 +1219,7 @@ function render(){
   const data = getFiltered();
 
   renderScorecardBangun(data);
+  renderScorecardCost(data);
 
   const totalBangun = data.length; // COUNTA: jumlah baris proyek (bernama) yang lolos filter aktif
   const onProgressData = data.filter(p=>p.stageNorm === "on progress");
