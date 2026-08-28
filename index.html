@@ -902,7 +902,7 @@ function deriveFields(list){
     // Ini BEDA dari p.status di atas (yang merupakan status risiko hasil hitungan otomatis).
     p.stage = (p.stage || "").toString().trim();
     if(!p.stage) p.stage = "Tanpa Status"; // kolom Status kosong/tidak terbaca di sheet -> JANGAN dianggap "On Progress"
-    p.stageNorm = p.stage.toLowerCase();
+    p.stageNorm = normalizeStage(p.stage);
     // "statusBank" = kolom status pengajuan bank per unit di CSV PROYEK.
     // Tidak kosong = unit berstatus SP3K. Kosong = unit dihitung Ready Stock.
     p.statusBank = (p.statusBank || "").toString().trim();
@@ -923,6 +923,59 @@ function deriveFields(list){
   return list;
 }
 
+// ===== NORMALISASI DATA CSV =====
+function normalizeHeader(s){
+  return (s ?? "").toString()
+    .replace(/\\uFEFF/g,"")
+    .trim()
+    .toLowerCase()
+    .replace(/[_-]+/g," ")
+    .replace(/\\s+/g," ");
+}
+
+function firstValue(row, aliases){
+  const normalized = {};
+  Object.keys(row || {}).forEach(k => {
+    normalized[normalizeHeader(k)] = row[k];
+  });
+  for(const alias of aliases){
+    const key = normalizeHeader(alias);
+    if(Object.prototype.hasOwnProperty.call(normalized,key)){
+      const v = normalized[key];
+      if(v !== null && v !== undefined && v.toString().trim() !== "") return v.toString().trim();
+    }
+  }
+  return "";
+}
+
+function parsePercentValue(val){
+  if(val === null || val === undefined || val === "") return 0;
+  if(typeof val === "number") return isFinite(val) ? val : 0;
+  const s = val.toString().trim().replace(/%/g,"").replace(/,/g,".");
+  const n = Number(s.replace(/[^0-9.-]/g,""));
+  return isFinite(n) ? n : 0;
+}
+
+function normalizeStage(val){
+  return (val ?? "").toString().trim().toLowerCase()
+    .replace(/[_-]+/g," ")
+    .replace(/\\s+/g," ");
+}
+
+function isOnProgress(p){
+  const s = normalizeStage(p.stage);
+  return ["on progress","onprogress","progress","sedang berjalan","berjalan","ongoing"].includes(s);
+}
+
+function isDone(p){
+  const s = normalizeStage(p.stage);
+  return ["selesai","done","completed","complete","finish","finished"].includes(s);
+}
+
+function hasFlag(val){
+  return normalizeFlag(val) !== "";
+}
+
 async function loadData(){
   if(!SHEET_CSV_URL){
     setSyncInfo("Data contoh (SHEET_CSV_URL belum diisi)");
@@ -939,18 +992,18 @@ async function loadData(){
       name: (row.name || row.Name || row.Nama || "").toString().trim(),
       region: (row.region || row.Region || row.Wilayah || "").toString().trim(),
       pic: (row.pic || row.PIC || "").toString().trim(),
-      planned: Number(row.planned || row["Target %"] || row.Target || 0),
-      actual: Number(row.actual || row["Realisasi %"] || row.Realisasi || 0),
-      deadline: (row.deadline || row.Deadline || "").toString().trim(),
-      stage: (row.stage || row.Stage || row.status || row.Status || "").toString().trim(),
-      statusBank: (row.status_bank || row["Status Bank"] || row.statusBank || row["status bank"] || "").toString().trim(),
-      actualProg: (row["actual prog."] || row["Actual Prog."] || row["actual prog"] || row["Actual Prog"] || row.actualProg || "").toString().trim(),
-      ontime: (row.ontime || row.Ontime || row["On Time"] || row["on time"] || row.OnTime || "").toString().trim(),
-      budgetTarget: (row["budget target"] || row["Budget Target"] || row.budgetTarget || row["Budget target"] || "").toString().trim(),
-      budgetAct: (row["budget act"] || row["Budget Act"] || row.budgetAct || row["budget actual"] || row["Budget Actual"] || "").toString().trim(),
+      planned: parsePercentValue(firstValue(row, ["planned","Plan","Target %","Target","target","Rencana %","Rencana"])),
+      actual: parsePercentValue(firstValue(row, ["actual","Actual","Realisasi %","Realisasi","Actual %","Progress","Progress %"])),
+      deadline: firstValue(row, ["deadline","Deadline","Tanggal Deadline","Due Date"]),
+      stage: firstValue(row, ["stage","Stage","status","Status","Tahap","Tahap Proyek"]),
+      statusBank: firstValue(row, ["status_bank","Status Bank","statusBank","status bank","StatusBank"]),
+      actualProg: firstValue(row, ["actual prog.","Actual Prog.","actual prog","Actual Prog","actualProg","Potential Late","Potential late"]),
+      ontime: firstValue(row, ["ontime","Ontime","On Time","on time","OnTime","On Track","On track"]),
+      budgetTarget: firstValue(row, ["budget target","Budget Target","budgetTarget","Budget target","RAB","RAB / Unit","Budget"]),
+      budgetAct: firstValue(row, ["budget act","Budget Act","budgetAct","budget actual","Budget Actual","Pemakaian","Actual Cost"]),
     })).filter(p=>p.name);
     if(!mapped.length) throw new Error("Sheet kosong atau kolom tidak sesuai");
-    setSyncInfo("Terhubung ke Google Sheets · " + new Date().toLocaleTimeString("id-ID"));
+    setSyncInfo("Terhubung ke Google Sheets · " + mapped.length + " proyek · " + new Date().toLocaleTimeString("id-ID"));
     return mapped;
   }catch(e){
     console.warn("Gagal memuat data dari Google Sheets, memakai data contoh.", e);
@@ -1120,28 +1173,26 @@ function renderScorecardBangun(data){
                            yang menghasilkan nilai MAX (poin 5)
 ===================================================================== */
 function renderScorecardCost(data){
-  const validTarget = data.filter(p=>typeof p.budgetTarget === "number" && !isNaN(p.budgetTarget));
-  const validAct = data.filter(p=>typeof p.budgetAct === "number" && !isNaN(p.budgetAct));
+  // Average Cost = hanya proyek yang sudah DONE/SELESAI.
+  // Jika tidak ada proyek DONE, tampilkan 0 dan keterangan "Tidak ada data".
+  const done = data.filter(isDone);
 
-  const rab = validTarget.length ? validTarget.reduce((s,p)=>s+p.budgetTarget,0)/validTarget.length : 0;
-  const pemakaian = validAct.length ? validAct.reduce((s,p)=>s+p.budgetAct,0)/validAct.length : 0;
+  const validTarget = done.filter(p=>Number.isFinite(p.budgetTarget) && p.budgetTarget > 0);
+  const validAct = done.filter(p=>Number.isFinite(p.budgetAct) && p.budgetAct > 0);
+
+  const rab = validTarget.length
+    ? validTarget.reduce((s,p)=>s+p.budgetTarget,0)/validTarget.length : 0;
+  const pemakaian = validAct.length
+    ? validAct.reduce((s,p)=>s+p.budgetAct,0)/validAct.length : 0;
   const pct = rab ? (pemakaian/rab)*100 : 0;
 
-  // TOP (min): abaikan baris dengan budget act 0/kosong, hanya ambil > 0
-  const candidatesForMin = validAct.filter(p=>p.budgetAct > 0);
-  // BOTTOM (max): tetap pakai seluruh baris yang punya angka valid
-  const candidatesForMax = validAct;
-
-  const topProj = candidatesForMin.length
-    ? candidatesForMin.reduce((min,p)=> p.budgetAct < min.budgetAct ? p : min, candidatesForMin[0])
-    : null;
-  const bottomProj = candidatesForMax.length
-    ? candidatesForMax.reduce((max,p)=> p.budgetAct > max.budgetAct ? p : max, candidatesForMax[0])
-    : null;
+  const topProj = validAct.length
+    ? validAct.reduce((min,p)=>p.budgetAct < min.budgetAct ? p : min, validAct[0]) : null;
+  const bottomProj = validAct.length
+    ? validAct.reduce((max,p)=>p.budgetAct > max.budgetAct ? p : max, validAct[0]) : null;
 
   const topVal = topProj ? topProj.budgetAct : 0;
   const bottomVal = bottomProj ? bottomProj.budgetAct : 0;
-
   const topRatio = pemakaian ? (topVal/pemakaian)*100 : 0;
   const bottomRatio = pemakaian ? (bottomVal/pemakaian)*100 : 0;
 
@@ -1154,10 +1205,10 @@ function renderScorecardCost(data){
 
   document.getElementById("costTopDetail").textContent = topProj
     ? `${topProj.region} | ${topProj.name} | ${formatRupiah(topProj.budgetAct)}`
-    : "Tidak ada data";
+    : (done.length ? "Data budget actual belum tersedia" : "Tidak ada proyek DONE");
   document.getElementById("costBottomDetail").textContent = bottomProj
     ? `${bottomProj.region} | ${bottomProj.name} | ${formatRupiah(bottomProj.budgetAct)}`
-    : "Tidak ada data";
+    : (done.length ? "Data budget actual belum tersedia" : "Tidak ada proyek DONE");
 
   updateCostChart(topRatio, bottomRatio);
 }
@@ -1235,15 +1286,17 @@ function render(){
   renderScorecardBangun(data);
   renderScorecardCost(data);
 
-  const totalBangun = data.length; // COUNTA: jumlah baris proyek (bernama) yang lolos filter aktif
-  const onProgressData = data.filter(p=>p.stageNorm === "on progress");
+  const totalBangun = data.length;
+  const onProgressData = data.filter(isOnProgress);
   const totalOngoing = onProgressData.length;
   const ongoingRatio = totalBangun ? (totalOngoing/totalBangun)*100 : 0;
 
-  const totalOnTrack = onProgressData.filter(p=>p.ontime !== "").length;
-  const onTrackRatio = totalOngoing ? (totalOnTrack/totalOngoing)*100 : 0;
+  // On Track dan Potential Late hanya dihitung dari proyek yang benar-benar On Progress.
+  const totalOnTrack = onProgressData.filter(p=>hasFlag(p.ontime)).length;
+  const totalLate = onProgressData.filter(p=>hasFlag(p.actualProg)).length;
 
-  const totalLate = onProgressData.filter(p=>p.actualProg !== "").length;
+  // Rasio dibuat saling konsisten terhadap jumlah proyek On Progress.
+  const onTrackRatio = totalOngoing ? (totalOnTrack/totalOngoing)*100 : 0;
   const lateRatio = totalOngoing ? (totalLate/totalOngoing)*100 : 0;
 
   // ---- Total Progress ----
