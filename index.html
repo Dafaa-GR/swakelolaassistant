@@ -205,6 +205,110 @@
   .sb-right-pct b{font-size:26px;font-weight:800;color:var(--text-dim);line-height:1;}
   .sb-right-pct span{font-size:10.5px;color:var(--text-dim);margin-top:2px;}
 
+
+  /* ===== Scorecard: Average Cost Done Bangun ===== */
+  .cost-scorecard{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:20px 24px; margin-bottom:20px;
+  }
+  .cost-head{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
+    margin-bottom:16px; flex-wrap:wrap;
+  }
+  .cost-title-wrap h2{
+    margin:0; font-size:16px; font-weight:800; color:var(--text);
+    letter-spacing:.15px;
+  }
+  .cost-title-wrap .cost-subtitle{
+    margin-top:3px; font-size:11px; color:var(--text-dim);
+  }
+  .cost-badge{
+    font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.45px;
+    color:#a45a00; background:#fff4e5; border:1px solid #ffd9ab;
+    padding:5px 9px; border-radius:999px;
+  }
+  .cost-layout{
+    display:grid; grid-template-columns:minmax(0,1.08fr) minmax(350px,.92fr);
+    gap:24px; align-items:stretch;
+  }
+  .cost-left{
+    min-width:0; display:flex; flex-direction:column;
+  }
+  .cost-metrics{
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+    border:1px solid var(--line); border-radius:10px; overflow:hidden;
+    background:var(--panel-2);
+  }
+  .cost-metric{
+    padding:14px 16px; min-width:0;
+    border-right:1px solid var(--line);
+  }
+  .cost-metric:last-child{border-right:none;}
+  .cost-metric-label{
+    font-size:10.5px; font-weight:800; color:var(--text-dim);
+    text-transform:uppercase; letter-spacing:.55px; margin-bottom:6px;
+  }
+  .cost-metric-value{
+    font-size:22px; line-height:1.15; font-weight:800; color:var(--text);
+    overflow-wrap:anywhere;
+  }
+  .cost-details{
+    display:grid; grid-template-columns:1fr 1fr; gap:12px;
+    margin-top:14px;
+  }
+  .cost-detail{
+    border:1px solid var(--line); border-radius:10px; padding:14px 15px;
+    min-width:0; background:var(--panel);
+  }
+  .cost-detail.top{border-left:4px solid var(--green);}
+  .cost-detail.bottom{border-left:4px solid var(--red);}
+  .cost-detail-label{
+    font-size:11px; font-weight:800; text-transform:uppercase;
+    letter-spacing:.45px; margin-bottom:7px;
+  }
+  .cost-detail.top .cost-detail-label{color:var(--green);}
+  .cost-detail.bottom .cost-detail-label{color:var(--red);}
+  .cost-detail-text{
+    font-size:13px; font-weight:700; color:var(--text); line-height:1.45;
+    overflow-wrap:anywhere;
+  }
+  .cost-detail-meta{
+    font-size:10.5px; color:var(--text-dim); margin-top:4px;
+  }
+  .cost-chart-card{
+    border:2px solid #f28a19; border-radius:24px;
+    padding:16px 18px 14px; min-width:0;
+    display:flex; flex-direction:column; background:#fffdf9;
+  }
+  .cost-extremes{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:8px;
+  }
+  .cost-extreme{
+    text-align:center; padding:2px 8px 8px;
+  }
+  .cost-extreme:first-child{border-right:1px solid #f0e2d3;}
+  .cost-extreme-label{
+    font-size:11px; font-weight:900; text-transform:uppercase;
+    letter-spacing:.5px; color:var(--text); margin-bottom:4px;
+  }
+  .cost-extreme-label .down{color:var(--green);}
+  .cost-extreme-label .up{color:var(--red);}
+  .cost-extreme-value{
+    font-size:18px; font-weight:800; color:var(--text);
+    overflow-wrap:anywhere;
+  }
+  .cost-chart-wrap{
+    position:relative; height:190px; min-height:190px; margin-top:auto;
+  }
+  .cost-chart-note{
+    margin-top:5px; text-align:center; font-size:10.5px;
+    color:var(--text-dim); font-style:italic;
+  }
+  .cost-empty{
+    display:flex; align-items:center; justify-content:center; min-height:150px;
+    color:var(--text-dim); font-size:12px; text-align:center; padding:20px;
+  }
+
   /* ===== Panels ===== */
   .panel{
     background:var(--panel); border:1px solid var(--line); border-radius:10px;
@@ -259,139 +363,10 @@
   .page{display:block;}
   .page.page-hidden{display:none;}
 
-
-  /* ===== Scorecard: Average Cost / Done Bangun ===== */
-  .scorecard-cost{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:20px 26px;
-    margin-bottom:20px;
-    display:grid;
-    grid-template-columns:minmax(330px, 1.05fr) minmax(430px, .95fr);
-    gap:26px;
-    align-items:stretch;
-  }
-  .cost-left{min-width:0;}
-  .cost-heading{
-    text-align:center;
-    margin-bottom:14px;
-  }
-  .cost-heading h2{
-    margin:0;
-    font-size:27px;
-    line-height:1;
-    letter-spacing:1.2px;
-    font-weight:900;
-    color:#332d2c;
-  }
-  .cost-heading .cost-subtitle{
-    margin-top:8px;
-    font-size:17px;
-    font-style:italic;
-    font-weight:700;
-    color:#332d2c;
-  }
-  .cost-metrics{
-    display:grid;
-    grid-template-columns:1fr 1fr 92px;
-    align-items:end;
-    gap:16px;
-    padding:12px 0 20px;
-    border-bottom:1px solid #aeb3bb;
-  }
-  .cost-metric-label{
-    font-size:12px;
-    text-transform:uppercase;
-    color:#606267;
-    margin-bottom:7px;
-    letter-spacing:.3px;
-  }
-  .cost-metric-value{
-    font-size:21px;
-    line-height:1.1;
-    font-weight:900;
-    color:#332d2c;
-    white-space:nowrap;
-  }
-  .cost-metric-value.cost-pct{font-style:italic;color:#5f6064;}
-  .cost-detail{
-    padding-top:18px;
-    display:grid;
-    gap:22px;
-  }
-  .cost-detail-label{
-    font-size:12px;
-    margin-bottom:8px;
-    color:#3b843f;
-  }
-  .cost-detail-label.bottom{color:#e1262e;}
-  .cost-detail-value{
-    font-size:17px;
-    line-height:1.25;
-    font-weight:800;
-    color:#332d2c;
-    overflow-wrap:anywhere;
-  }
-  .cost-detail-empty{color:var(--text-dim);font-weight:600;}
-  .cost-right{
-    border:4px solid #f08a17;
-    border-radius:0 92px 92px 0;
-    padding:20px 30px 20px;
-    min-height:330px;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-    background:#fff;
-  }
-  .cost-extremes{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:20px;
-    text-align:center;
-  }
-  .cost-extreme-label{
-    font-size:17px;
-    font-weight:900;
-    color:#332d2c;
-  }
-  .cost-extreme-label.top::after{content:" ↓";color:#58a84b;font-size:25px;}
-  .cost-extreme-label.bottom::after{content:" ↑";color:#ed2631;font-size:25px;}
-  .cost-extreme-value{
-    margin-top:10px;
-    font-size:18px;
-    font-weight:900;
-    color:#5f6064;
-    white-space:nowrap;
-  }
-  .cost-chart-wrap{height:190px;position:relative;}
-  .cost-chart-note{
-    text-align:center;
-    font-size:13px;
-    font-style:italic;
-    color:#66686c;
-    margin-top:8px;
-  }
-  @media (max-width:1050px){
-    .scorecard-cost{grid-template-columns:1fr;}
-    .cost-right{min-height:310px;}
-  }
-  @media (max-width:700px){
-    .cost-metrics{grid-template-columns:1fr 1fr;}
-    .cost-metric:last-child{grid-column:1 / -1;}
-    .cost-right{border-radius:0 55px 55px 0;padding:18px 18px;}
-  }
-  @media (max-width:480px){
-    .cost-metrics{grid-template-columns:1fr;}
-    .cost-metric:last-child{grid-column:auto;}
-    .cost-heading h2{font-size:23px;}
-    .cost-extremes{gap:8px;}
-    .cost-extreme-value{font-size:15px;}
-  }
-
   /* ===== Responsive ===== */
   @media (max-width:1100px){
     .row-2col{grid-template-columns:1fr;}
+    .cost-layout{grid-template-columns:1fr;}
   }
   @media (max-width:900px){
     .kpi-grid{grid-template-columns:repeat(2,1fr);}
@@ -407,6 +382,10 @@
   @media (max-width:700px){
     .scorecard-bangun{flex-direction:column;}
     .sb-divider-v{width:auto;height:1px;align-self:stretch;}
+    .cost-metrics{grid-template-columns:1fr;}
+    .cost-metric{border-right:none;border-bottom:1px solid var(--line);}
+    .cost-metric:last-child{border-bottom:none;}
+    .cost-details{grid-template-columns:1fr;}
   }
   @media (max-width:560px){
     .kpi-grid{grid-template-columns:1fr;}
@@ -580,58 +559,65 @@
         </div>
       </div>
 
-      <!-- ===== Scorecard: Average Cost / Done Bangun ===== -->
-      <div class="scorecard-cost" id="scorecardCost">
-        <div class="cost-left">
-          <div class="cost-heading">
-            <h2>AVERAGE COST</h2>
-            <div class="cost-subtitle">DONE BANGUN</div>
+      <!-- ===== Scorecard: Average Cost / proyek Status=Selesai ===== -->
+      <section class="cost-scorecard" id="costScorecard">
+        <div class="cost-head">
+          <div class="cost-title-wrap">
+            <h2>Average Cost — Done Bangun</h2>
+            <div class="cost-subtitle">Rata-rata biaya proyek berstatus Selesai, mengikuti filter Wilayah dan PIC aktif.</div>
           </div>
-
-          <div class="cost-metrics">
-            <div class="cost-metric">
-              <div class="cost-metric-label">RAB</div>
-              <div class="cost-metric-value" id="costAvgTarget">Rp0</div>
-            </div>
-            <div class="cost-metric">
-              <div class="cost-metric-label">PEMAKAIAN</div>
-              <div class="cost-metric-value" id="costAvgAct">Rp0</div>
-            </div>
-            <div class="cost-metric">
-              <div class="cost-metric-label">%</div>
-              <div class="cost-metric-value cost-pct" id="costUsagePct">0%</div>
-            </div>
-          </div>
-
-          <div class="cost-detail">
-            <div>
-              <div class="cost-detail-label">TOP Actual Cost</div>
-              <div class="cost-detail-value" id="costTopDetail">-</div>
-            </div>
-            <div>
-              <div class="cost-detail-label bottom">BOTTOM Actual Cost</div>
-              <div class="cost-detail-value" id="costBottomDetail">-</div>
-            </div>
-          </div>
+          <div class="cost-badge" id="costDoneCount">0 proyek selesai</div>
         </div>
 
-        <div class="cost-right">
-          <div class="cost-extremes">
-            <div>
-              <div class="cost-extreme-label top">TOP</div>
-              <div class="cost-extreme-value" id="costTopValue">Rp0</div>
+        <div class="cost-layout">
+          <div class="cost-left">
+            <div class="cost-metrics">
+              <div class="cost-metric">
+                <div class="cost-metric-label">RAB</div>
+                <div class="cost-metric-value" id="costAvgRab">Rp0</div>
+              </div>
+              <div class="cost-metric">
+                <div class="cost-metric-label">Pemakaian</div>
+                <div class="cost-metric-value" id="costAvgAct">Rp0</div>
+              </div>
+              <div class="cost-metric">
+                <div class="cost-metric-label">Pemakaian / RAB</div>
+                <div class="cost-metric-value" id="costUsagePct">0%</div>
+              </div>
             </div>
-            <div>
-              <div class="cost-extreme-label bottom">BOTTOM</div>
-              <div class="cost-extreme-value" id="costBottomValue">Rp0</div>
+
+            <div class="cost-details">
+              <div class="cost-detail top">
+                <div class="cost-detail-label">Top Actual Cost</div>
+                <div class="cost-detail-text" id="costTopDetail">Tidak ada data</div>
+                <div class="cost-detail-meta">Nilai budget act terendah &gt; 0</div>
+              </div>
+              <div class="cost-detail bottom">
+                <div class="cost-detail-label">Bottom Actual Cost</div>
+                <div class="cost-detail-text" id="costBottomDetail">Tidak ada data</div>
+                <div class="cost-detail-meta">Nilai budget act tertinggi</div>
+              </div>
             </div>
           </div>
-          <div class="cost-chart-wrap">
-            <canvas id="chartCost"></canvas>
+
+          <div class="cost-chart-card">
+            <div class="cost-extremes">
+              <div class="cost-extreme">
+                <div class="cost-extreme-label">Top <span class="down">▼</span></div>
+                <div class="cost-extreme-value" id="costTopValue">Rp0</div>
+              </div>
+              <div class="cost-extreme">
+                <div class="cost-extreme-label">Bottom <span class="up">▲</span></div>
+                <div class="cost-extreme-value" id="costBottomValue">Rp0</div>
+              </div>
+            </div>
+            <div class="cost-chart-wrap" id="costChartWrap">
+              <canvas id="chartCost"></canvas>
+            </div>
+            <div class="cost-chart-note">Indeks terhadap rata-rata pemakaian — rata-rata = 100%</div>
           </div>
-          <div class="cost-chart-note">dari rata-rata pemakaian</div>
         </div>
-      </div>
+      </section>
 
       <div class="row-2col">
         <div class="panel" id="progressPanel">
@@ -695,7 +681,7 @@
         </div>
       </div>
 
-      <div class="footer-note">Dashboard terhubung ke CSV proyek. Scorecard Average Cost memakai header "budget target" dan "budget act"; seluruh perhitungan mengikuti filter Wilayah & PIC.</div>
+      <div class="footer-note">Dashboard contoh dengan data ilustratif. Ganti array PROJECTS pada kode sumber dengan data aktual proyek Anda.</div>
 
     </div>
 
@@ -832,8 +818,8 @@
 /* =====================================================================
    KONEKSI KE GOOGLE SHEETS — DATA PROYEK
    1. Buat Google Sheet dengan kolom header persis:
-        name, region, pic, planned, actual, budget target, budget act, deadline, status, status_bank,
-        actual prog., ontime
+        name, region, pic, planned, actual, deadline, status, status_bank,
+        actual prog., ontime, budget target, budget act
       - Kolom "status" diisi tahap proyek, misal: On Progress / Selesai / Belum Mulai
         (dipakai untuk KPI "Total Progress" & filter "Tahap Proyek")
       - Kolom "status_bank" (boleh diberi nama header: "Status Bank") diisi status
@@ -873,18 +859,18 @@ const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9
 const STATUS_BANK_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFaUJxX9mAuPr0hWTRnspZRKdmDlDS6BtiJ8BBrrq4Ay1mEjbYc2Qfze76VpXKSEs3gz3yw9ZYkY71/pub?gid=1125246992&single=true&output=csv";
 
 const DEMO_PROJECTS = [
-  {name:"Gedung Perkantoran Menara A", region:"Jakarta", pic:"Rudi Santoso", planned:80, actual:74, deadline:"2026-10-15", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya", budgetTarget:55000000, budgetAct:54000000},
-  {name:"Perumahan Griya Asri Blok C", region:"Bekasi", pic:"Siti Aminah", planned:65, actual:66, deadline:"2026-11-02", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya", budgetTarget:58000000, budgetAct:57000000},
-  {name:"Rusun Pekerja Cikarang", region:"Bekasi", pic:"Bambang Wijaya", planned:50, actual:34, deadline:"2026-09-20", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:"", budgetTarget:60000000, budgetAct:62000000},
-  {name:"Pabrik Manufaktur Blok D", region:"Karawang", pic:"Rudi Santoso", planned:90, actual:91, deadline:"2026-09-05", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya", budgetTarget:52000000, budgetAct:51000000},
-  {name:"Gudang Logistik Terpadu", region:"Cikampek", pic:"Dewi Lestari", planned:40, actual:28, deadline:"2026-12-10", stage:"Belum Mulai", statusBank:"", actualProg:"", ontime:"", budgetTarget:50000000, budgetAct:0},
-  {name:"Mall Sentosa Extension", region:"Jakarta", pic:"Dewi Lestari", planned:70, actual:69, deadline:"2026-10-30", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya", budgetTarget:56000000, budgetAct:55000000},
-  {name:"Apartemen Green Tower B", region:"Bandung", pic:"Bambang Wijaya", planned:55, actual:41, deadline:"2026-09-25", stage:"On Progress", statusBank:"Proses", actualProg:"Berpotensi Telat", ontime:"", budgetTarget:59000000, budgetAct:61000000},
-  {name:"Rumah Sakit Cabang Timur", region:"Bandung", pic:"Siti Aminah", planned:30, actual:29, deadline:"2027-01-15", stage:"Belum Mulai", statusBank:"", actualProg:"", ontime:"", budgetTarget:54000000, budgetAct:0},
-  {name:"Sekolah Terpadu Wilayah 2", region:"Bogor", pic:"Rudi Santoso", planned:85, actual:79, deadline:"2026-09-18", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Tidak Ada", budgetTarget:57000000, budgetAct:56000000},
-  {name:"Jembatan Penghubung Cikarang", region:"Bekasi", pic:"Dewi Lestari", planned:45, actual:22, deadline:"2026-09-10", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:"", budgetTarget:61000000, budgetAct:64318000},
-  {name:"Kantor Cabang Bogor", region:"Bogor", pic:"Bambang Wijaya", planned:95, actual:96, deadline:"2026-08-30", stage:"Selesai", statusBank:"Approved", actualProg:"", ontime:"", budgetTarget:48056392, budgetAct:48056392},
-  {name:"Terminal Distribusi Barat", region:"Karawang", pic:"Siti Aminah", planned:60, actual:52, deadline:"2026-11-20", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:"", budgetTarget:55000000, budgetAct:53000000},
+  {name:"Gedung Perkantoran Menara A", region:"Jakarta", pic:"Rudi Santoso", planned:80, actual:74, deadline:"2026-10-15", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
+  {name:"Perumahan Griya Asri Blok C", region:"Bekasi", pic:"Siti Aminah", planned:65, actual:66, deadline:"2026-11-02", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
+  {name:"Rusun Pekerja Cikarang", region:"Bekasi", pic:"Bambang Wijaya", planned:50, actual:34, deadline:"2026-09-20", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:""},
+  {name:"Pabrik Manufaktur Blok D", region:"Karawang", pic:"Rudi Santoso", planned:90, actual:91, deadline:"2026-09-05", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
+  {name:"Gudang Logistik Terpadu", region:"Cikampek", pic:"Dewi Lestari", planned:40, actual:28, deadline:"2026-12-10", stage:"Belum Mulai", statusBank:"", actualProg:"", ontime:""},
+  {name:"Mall Sentosa Extension", region:"Jakarta", pic:"Dewi Lestari", planned:70, actual:69, deadline:"2026-10-30", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Ya"},
+  {name:"Apartemen Green Tower B", region:"Bandung", pic:"Bambang Wijaya", planned:55, actual:41, deadline:"2026-09-25", stage:"On Progress", statusBank:"Proses", actualProg:"Berpotensi Telat", ontime:""},
+  {name:"Rumah Sakit Cabang Timur", region:"Bandung", pic:"Siti Aminah", planned:30, actual:29, deadline:"2027-01-15", stage:"Belum Mulai", statusBank:"", actualProg:"", ontime:""},
+  {name:"Sekolah Terpadu Wilayah 2", region:"Bogor", pic:"Rudi Santoso", planned:85, actual:79, deadline:"2026-09-18", stage:"On Progress", statusBank:"Approved", actualProg:"", ontime:"Tidak Ada"},
+  {name:"Jembatan Penghubung Cikarang", region:"Bekasi", pic:"Dewi Lestari", planned:45, actual:22, deadline:"2026-09-10", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:""},
+  {name:"Kantor Cabang Bogor", region:"Bogor", pic:"Bambang Wijaya", planned:95, actual:96, deadline:"2026-08-30", stage:"Selesai", statusBank:"Approved", actualProg:"", ontime:""},
+  {name:"Terminal Distribusi Barat", region:"Karawang", pic:"Siti Aminah", planned:60, actual:52, deadline:"2026-11-20", stage:"On Progress", statusBank:"", actualProg:"Berpotensi Telat", ontime:""},
 ];
 
 // Data contoh sumber "status bank" (sheet/csv terpisah dari data proyek di atas)
@@ -929,156 +915,78 @@ function normalizeFlag(val){
   return v;
 }
 
-/* ===== Helper Average Cost =====
-   CSV proyek wajib menyediakan header:
-   - budget target
-   - budget act
 
-   Nilai boleh berupa angka biasa maupun format Rupiah seperti:
-   55484392 / 55.484.392 / Rp55.484.392
-*/
-function parseBudgetValue(val){
-  if(val === null || val === undefined) return 0;
-  if(typeof val === "number") return Number.isFinite(val) ? val : 0;
+function firstDefined(row, keys){
+  for(const key of keys){
+    if(Object.prototype.hasOwnProperty.call(row, key)){
+      const value = row[key];
+      if(value !== undefined && value !== null && value.toString().trim() !== "") return value;
+    }
+  }
+  return null;
+}
 
-  let s = String(val).trim();
-  if(!s) return 0;
+// Membaca angka biaya dari CSV secara aman, termasuk format:
+// 55484392 | 55.484.392 | 55,484,392 | Rp55.484.392 | 55.484.392,50
+function parseMoney(value){
+  if(value === null || value === undefined) return null;
+  if(typeof value === "number") return Number.isFinite(value) ? value : null;
 
-  // Hapus simbol mata uang, spasi, dan karakter selain angka, titik, koma, minus.
-  s = s.replace(/rp/gi,"").replace(/\s/g,"").replace(/[^\d.,-]/g,"");
-  if(!s) return 0;
+  let s = String(value).trim();
+  if(!s) return null;
+  s = s.replace(/\s/g,"").replace(/rp/gi,"").replace(/[^\d,.\-]/g,"");
+  if(!s || s === "-") return null;
 
-  // Format Indonesia: 55.484.392 atau 55.484.392,50
-  if(s.includes(".") && s.includes(",")){
-    s = s.replace(/\./g,"").replace(",",".");
-  }else if(/^-?\d{1,3}(\.\d{3})+$/.test(s)){
-    s = s.replace(/\./g,"");
-  }else if(s.includes(",") && !s.includes(".")){
-    // Jika hanya koma, anggap koma sebagai desimal.
-    s = s.replace(",",".");
+  const hasComma = s.includes(",");
+  const hasDot = s.includes(".");
+
+  if(hasComma && hasDot){
+    // Separator terakhir dianggap desimal; separator lain dianggap ribuan.
+    if(s.lastIndexOf(",") > s.lastIndexOf(".")){
+      s = s.replace(/\./g,"").replace(",",".");
+    } else {
+      s = s.replace(/,/g,"");
+    }
+  } else if(hasComma){
+    const parts = s.split(",");
+    if(parts.length > 2){
+      s = parts.join(""); // kemungkinan pemisah ribuan
+    } else {
+      const decimals = parts[1]?.length || 0;
+      s = decimals > 0 && decimals <= 2 ? parts[0] + "." + parts[1] : parts.join("");
+    }
+  } else if(hasDot){
+    const parts = s.split(".");
+    if(parts.length > 2){
+      s = parts.join(""); // format Indonesia ribuan: 55.484.392
+    } else {
+      const decimals = parts[1]?.length || 0;
+      // Satu titik + 3 digit di belakang lebih mungkin pemisah ribuan.
+      if(decimals === 3) s = parts.join("");
+    }
   }
 
   const n = Number(s);
-  return Number.isFinite(n) ? n : 0;
+  return Number.isFinite(n) ? n : null;
 }
 
 function formatRupiah(value){
-  const n = Number(value) || 0;
-  return "Rp" + Math.round(n).toLocaleString("id-ID");
+  if(value === null || value === undefined || !Number.isFinite(Number(value))) return "—";
+  return new Intl.NumberFormat("id-ID", {
+    style:"currency", currency:"IDR", maximumFractionDigits:0
+  }).format(Number(value)).replace(/\s/g,"");
 }
 
-function averageBudget(data, key){
-  const values = data
-    .map(p=>parseBudgetValue(p[key]))
-    .filter(v=>Number.isFinite(v));
-  return values.length ? values.reduce((sum,v)=>sum+v,0)/values.length : 0;
-}
-
-/* Ambil proyek dengan Budget Act terendah tetapi TIDAK BOLEH 0.
-   Nilai negatif juga tidak dianggap valid karena user meminta nilai di atas 0. */
-function getBudgetExtremes(data){
-  const valid = data
-    .map(p=>({...p, budgetAct:parseBudgetValue(p.budgetAct), budgetTarget:parseBudgetValue(p.budgetTarget)}))
-    .filter(p=>p.budgetAct > 0);
-
-  if(!valid.length) return {top:null, bottom:null};
-  return {
-    top: valid.reduce((min,p)=>p.budgetAct < min.budgetAct ? p : min, valid[0]),
-    bottom: valid.reduce((max,p)=>p.budgetAct > max.budgetAct ? p : max, valid[0])
-  };
-}
-
-function renderScorecardCost(data){
-  const avgTarget = averageBudget(data,"budgetTarget");
-  const avgAct = averageBudget(data,"budgetAct");
-  const usagePct = avgTarget > 0 ? (avgAct / avgTarget) * 100 : 0;
-  const {top,bottom} = getBudgetExtremes(data);
-
-  document.getElementById("costAvgTarget").textContent = formatRupiah(avgTarget);
-  document.getElementById("costAvgAct").textContent = formatRupiah(avgAct);
-  document.getElementById("costUsagePct").textContent = avgTarget > 0 ? usagePct.toFixed(0) + "%" : "0%";
-
-  const topDetail = document.getElementById("costTopDetail");
-  const bottomDetail = document.getElementById("costBottomDetail");
-
-  if(top){
-    document.getElementById("costTopValue").textContent = formatRupiah(top.budgetAct);
-    topDetail.innerHTML = `${top.region || "-"} | ${top.name || "-"} | ${formatRupiah(top.budgetAct)}`;
-  }else{
-    document.getElementById("costTopValue").textContent = "Rp0";
-    topDetail.innerHTML = '<span class="cost-detail-empty">Tidak ada Budget Act &gt; 0 pada filter aktif</span>';
-  }
-
-  if(bottom){
-    document.getElementById("costBottomValue").textContent = formatRupiah(bottom.budgetAct);
-    bottomDetail.innerHTML = `${bottom.region || "-"} | ${bottom.name || "-"} | ${formatRupiah(bottom.budgetAct)}`;
-  }else{
-    document.getElementById("costBottomValue").textContent = "Rp0";
-    bottomDetail.innerHTML = '<span class="cost-detail-empty">Tidak ada Budget Act &gt; 0 pada filter aktif</span>';
-  }
-
-  renderCostChart(top,bottom,avgAct);
-}
-
-function renderCostChart(top,bottom,avgAct){
-  if(charts.cost) charts.cost.destroy();
-
-  const topRatio = top && avgAct > 0 ? (top.budgetAct / avgAct) * 100 : 0;
-  const bottomRatio = bottom && avgAct > 0 ? (bottom.budgetAct / avgAct) * 100 : 0;
-  const chartValues = [topRatio,bottomRatio];
-  const maxValue = Math.max(100, ...chartValues, 1) * 1.15;
-
-  charts.cost = new Chart(document.getElementById("chartCost"), {
-    type:"bar",
-    data:{
-      labels:["TOP","BOTTOM"],
-      datasets:[{
-        label:"% dari rata-rata pemakaian",
-        data:chartValues,
-        backgroundColor:["#55a64b","#e1262e"],
-        borderRadius:7,
-        barThickness:24
-      }]
-    },
-    options:{
-      indexAxis:"y",
-      responsive:true,
-      maintainAspectRatio:false,
-      animation:{duration:350},
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          callbacks:{
-            label:(ctx)=>" " + ctx.parsed.x.toFixed(1) + "% dari rata-rata pemakaian"
-          }
-        }
-      },
-      scales:{
-        x:{
-          beginAtZero:true,
-          max:maxValue,
-          ticks:{
-            color:"#667085",
-            font:{size:10},
-            callback:(value)=>value+"%"
-          },
-          grid:{color:"#edf0f5"}
-        },
-        y:{
-          ticks:{color:"#667085",font:{size:11,weight:"700"}},
-          grid:{display:false}
-        }
-      }
-    }
-  });
+function formatPct(value, digits=1){
+  if(!Number.isFinite(value)) return "—";
+  const rounded = Number(value.toFixed(digits));
+  return rounded.toLocaleString("id-ID", {maximumFractionDigits:digits}) + "%";
 }
 
 function deriveFields(list){
   list.forEach(p=>{
     p.planned = Number(p.planned) || 0;
     p.actual = Number(p.actual) || 0;
-    p.budgetTarget = parseBudgetValue(p.budgetTarget);
-    p.budgetAct = parseBudgetValue(p.budgetAct);
     p.deviation = +(p.actual - p.planned).toFixed(1);
     const daysLeft = (new Date(p.deadline) - new Date()) / (1000*60*60*24);
     const remaining = 100 - p.actual;
@@ -1105,6 +1013,11 @@ function deriveFields(list){
     // Tidak kosong = proyek (yang sedang On Progress) berjalan tepat waktu -> KPI "On Track".
     // Nilai seperti "Tidak Ada" dianggap SAMA DENGAN KOSONG (lihat normalizeFlag/EMPTY_FLAG_VALUES) -> TIDAK dihitung.
     p.ontime = normalizeFlag(p.ontime);
+
+    // Kolom biaya untuk scorecard Average Cost.
+    // null = kosong/tidak terbaca; angka 0 tetap dipertahankan sebagai nilai valid.
+    p.budgetTarget = p.budgetTarget === null || p.budgetTarget === undefined ? null : parseMoney(p.budgetTarget);
+    p.budgetAct = p.budgetAct === null || p.budgetAct === undefined ? null : parseMoney(p.budgetAct);
   });
   return list;
 }
@@ -1126,13 +1039,17 @@ async function loadData(){
       pic: (row.pic || row.PIC || "").toString().trim(),
       planned: Number(row.planned || row["Target %"] || row.Target || 0),
       actual: Number(row.actual || row["Realisasi %"] || row.Realisasi || 0),
-      budgetTarget: parseBudgetValue(row["budget target"] || row["Budget Target"] || row.budgetTarget || row.budget_target || row.RAB || row.rab || 0),
-      budgetAct: parseBudgetValue(row["budget act"] || row["Budget Act"] || row.budgetAct || row.budget_act || row.Pemakaian || row.pemakaian || 0),
       deadline: (row.deadline || row.Deadline || "").toString().trim(),
       stage: (row.stage || row.Stage || row.status || row.Status || "").toString().trim(),
       statusBank: (row.status_bank || row["Status Bank"] || row.statusBank || row["status bank"] || "").toString().trim(),
       actualProg: (row["actual prog."] || row["Actual Prog."] || row["actual prog"] || row["Actual Prog"] || row.actualProg || "").toString().trim(),
       ontime: (row.ontime || row.Ontime || row["On Time"] || row["on time"] || row.OnTime || "").toString().trim(),
+      budgetTarget: parseMoney(firstDefined(row, [
+        "budget target","Budget Target","BUDGET TARGET","budget_target","budgetTarget","RAB","rab"
+      ])),
+      budgetAct: parseMoney(firstDefined(row, [
+        "budget act","Budget Act","BUDGET ACT","budget_act","budgetAct","Actual Cost","actual cost"
+      ])),
     })).filter(p=>p.name);
     if(!mapped.length) throw new Error("Sheet kosong atau kolom tidak sesuai");
     setSyncInfo("Terhubung ke Google Sheets · " + new Date().toLocaleTimeString("id-ID"));
@@ -1290,6 +1207,157 @@ function renderScorecardBangun(data){
   document.getElementById("sbReadyMunculPct").textContent = Math.round(pctReadyMuncul) + "%";
 }
 
+
+/* =====================================================================
+   SCORECARD AVERAGE COST — hanya proyek dengan Status/stage = "Selesai"
+   dan tetap mengikuti filter Wilayah + PIC karena menerima `data` dari
+   getFiltered().
+
+   RAB        = AVERAGE "budget target" pada proyek selesai
+   Pemakaian  = AVERAGE "budget act" pada proyek selesai
+   %          = Pemakaian / RAB
+   TOP        = MIN "budget act" yang > 0
+   BOTTOM     = MAX "budget act"
+   Indeks chart TOP    = TOP / rata-rata Pemakaian
+   Indeks chart BOTTOM = BOTTOM / rata-rata Pemakaian
+===================================================================== */
+function renderCostScorecard(data){
+  const done = data.filter(p => p.stageNorm === "selesai");
+  const validTargets = done.map(p=>p.budgetTarget).filter(v=>Number.isFinite(v));
+  const validActs = done.map(p=>p.budgetAct).filter(v=>Number.isFinite(v));
+
+  const avg = arr => arr.length ? arr.reduce((s,v)=>s+v,0)/arr.length : null;
+  const avgTarget = avg(validTargets);
+  const avgAct = avg(validActs);
+  const usagePct = Number.isFinite(avgTarget) && avgTarget !== 0 && Number.isFinite(avgAct)
+    ? (avgAct / avgTarget) * 100
+    : null;
+
+  // TOP sengaja mengabaikan budget act = 0 sesuai requirement.
+  const positiveActRows = done.filter(p => Number.isFinite(p.budgetAct) && p.budgetAct > 0);
+  const numericActRows = done.filter(p => Number.isFinite(p.budgetAct));
+
+  const topRow = positiveActRows.length
+    ? positiveActRows.reduce((best,p)=>p.budgetAct < best.budgetAct ? p : best)
+    : null;
+  const bottomRow = numericActRows.length
+    ? numericActRows.reduce((best,p)=>p.budgetAct > best.budgetAct ? p : best)
+    : null;
+
+  document.getElementById("costDoneCount").textContent = `${done.length} proyek selesai`;
+  document.getElementById("costAvgRab").textContent = formatRupiah(avgTarget);
+  document.getElementById("costAvgAct").textContent = formatRupiah(avgAct);
+  document.getElementById("costUsagePct").textContent = usagePct === null ? "—" : formatPct(usagePct,1);
+
+  document.getElementById("costTopValue").textContent = topRow ? formatRupiah(topRow.budgetAct) : "—";
+  document.getElementById("costBottomValue").textContent = bottomRow ? formatRupiah(bottomRow.budgetAct) : "—";
+
+  document.getElementById("costTopDetail").textContent = topRow
+    ? `${topRow.region || "Tanpa Wilayah"} | ${topRow.name || "Tanpa Nama"} | ${formatRupiah(topRow.budgetAct)}`
+    : "Tidak ada budget act > 0 pada proyek selesai";
+
+  document.getElementById("costBottomDetail").textContent = bottomRow
+    ? `${bottomRow.region || "Tanpa Wilayah"} | ${bottomRow.name || "Tanpa Nama"} | ${formatRupiah(bottomRow.budgetAct)}`
+    : "Tidak ada budget act pada proyek selesai";
+
+  const topIndex = topRow && Number.isFinite(avgAct) && avgAct !== 0
+    ? (topRow.budgetAct / avgAct) * 100
+    : null;
+  const bottomIndex = bottomRow && Number.isFinite(avgAct) && avgAct !== 0
+    ? (bottomRow.budgetAct / avgAct) * 100
+    : null;
+
+  renderCostChart(topIndex, bottomIndex);
+}
+
+const averageCostLinePlugin = {
+  id:"averageCostLine",
+  afterDatasetsDraw(chart){
+    const x = chart.scales.x;
+    const area = chart.chartArea;
+    if(!x || !area) return;
+    const xPos = x.getPixelForValue(100);
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.setLineDash([5,4]);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#98a2b3";
+    ctx.moveTo(xPos, area.top);
+    ctx.lineTo(xPos, area.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#667085";
+    ctx.font = "10px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Rata-rata 100%", xPos, Math.max(10, area.top - 6));
+    ctx.restore();
+  }
+};
+
+function renderCostChart(topIndex, bottomIndex){
+  if(charts.cost) charts.cost.destroy();
+
+  const hasData = Number.isFinite(topIndex) || Number.isFinite(bottomIndex);
+  const canvas = document.getElementById("chartCost");
+
+  if(!hasData){
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    charts.cost = null;
+    return;
+  }
+
+  const safeTop = Number.isFinite(topIndex) ? +topIndex.toFixed(1) : 0;
+  const safeBottom = Number.isFinite(bottomIndex) ? +bottomIndex.toFixed(1) : 0;
+  const axisMax = Math.max(120, Math.ceil(Math.max(safeTop,safeBottom,100) / 20) * 20 + 20);
+
+  charts.cost = new Chart(canvas, {
+    type:"bar",
+    data:{
+      labels:["TOP","BOTTOM"],
+      datasets:[{
+        label:"Indeks vs Rata-rata",
+        data:[safeTop,safeBottom],
+        backgroundColor:["#1f9d63","#e0483a"],
+        borderRadius:5,
+        barThickness:24
+      }]
+    },
+    plugins:[averageCostLinePlugin],
+    options:{
+      indexAxis:"y",
+      responsive:true,
+      maintainAspectRatio:false,
+      animation:{duration:250},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:(ctx)=>`${ctx.raw.toLocaleString("id-ID")}% dari rata-rata pemakaian`
+          }
+        }
+      },
+      scales:{
+        x:{
+          beginAtZero:true,
+          max:axisMax,
+          ticks:{
+            color:"#667085",
+            font:{size:10},
+            callback:(v)=>v+"%"
+          },
+          grid:{color:"#f2e9df"}
+        },
+        y:{
+          ticks:{color:"#4b5567",font:{size:10,weight:"bold"}},
+          grid:{display:false}
+        }
+      }
+    }
+  });
+}
+
 /* =====================================================================
    TIGA SCORECARD KPI ATAS (Total Progress / On Track / Potential Late)
    - Total Progress  = COUNTIF kolom "Status/stage" bernilai "On Progress"
@@ -1305,7 +1373,7 @@ function render(){
   const data = getFiltered();
 
   renderScorecardBangun(data);
-  renderScorecardCost(data);
+  renderCostScorecard(data);
 
   const totalBangun = data.length; // COUNTA: jumlah baris proyek (bernama) yang lolos filter aktif
   const onProgressData = data.filter(p=>p.stageNorm === "on progress");
