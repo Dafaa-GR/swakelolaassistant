@@ -240,17 +240,27 @@
     background:var(--panel-2);
   }
   .cost-metric{
-    padding:14px 15px 15px; min-width:0;
+    padding:14px 16px 15px; min-width:0;
     border-right:1px solid var(--line);
+    overflow:hidden;
   }
   .cost-metric:last-child{border-right:none;}
   .cost-metric-label{
     font-size:10.5px; font-weight:700; color:var(--text-dim);
-    text-transform:uppercase; letter-spacing:.55px; margin-bottom:6px; line-height:1.2;
+    text-transform:uppercase; letter-spacing:.45px; margin-bottom:7px; line-height:1.2;
+    white-space:nowrap;
   }
   .cost-metric-value{
-    font-size:24px; line-height:1.08; font-weight:800; color:var(--text);
-    letter-spacing:-.25px; white-space:nowrap;
+    /* Nominal Rupiah jauh lebih panjang daripada angka KPI biasa.
+       Ukuran dibuat responsif supaya tetap tegas tetapi tidak saling menabrak. */
+    font-size:clamp(17px, 1.65vw, 21px);
+    line-height:1.15; font-weight:800; color:var(--text);
+    letter-spacing:-.35px; white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+  }
+  .cost-metric:nth-child(3) .cost-metric-value{
+    font-size:clamp(19px, 1.8vw, 23px);
+    letter-spacing:-.25px;
   }
   .cost-details{
     display:grid; grid-template-columns:1fr 1fr; gap:12px;
@@ -414,6 +424,9 @@
   }
   @media (max-width:900px){
     .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .cost-metric{padding-left:14px;padding-right:14px;}
+    .cost-metric-value{font-size:18px;}
+    .cost-metric:nth-child(3) .cost-metric-value{font-size:20px;}
     .sidebar{
       position:fixed; left:0; top:0; transform:translateX(-100%);
       box-shadow:2px 0 18px rgba(20,25,35,.15);
