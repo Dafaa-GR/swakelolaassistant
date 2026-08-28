@@ -905,14 +905,76 @@ let sortKey = "deviation";
 let sortDir = 1;
 let charts = {};
 
-// Nilai teks yang dianggap SAMA DENGAN KOSONG pada kolom penanda "actual prog." & "ontime".
-// Jika sel di CSV berisi salah satu teks ini (tidak peka huruf besar/kecil & spasi),
-// baris tsb TIDAK ikut dihitung di scorecard "Potential Late" / "On Track".
-const EMPTY_FLAG_VALUES = ["tidak ada", "-", "n/a", "na", "kosong"];
+// Nilai yang dianggap TIDAK AKTIF pada kolom penanda "actual prog." & "ontime".
+// Selain sel kosong, formula Google Sheets kadang menghasilkan 0 / FALSE / N/A.
+// Nilai-nilai tersebut tidak boleh ikut terhitung sebagai On Track / Potential Late.
+const EMPTY_FLAG_VALUES = new Set([
+  "", "tidak ada", "-", "–", "—", "n/a", "na", "#n/a", "kosong",
+  "false", "no", "tidak", "none", "null", "nil", "0", "0%", "0.0", "0,0"
+]);
 function normalizeFlag(val){
-  const v = (val || "").toString().trim();
-  if(EMPTY_FLAG_VALUES.includes(v.toLowerCase())) return "";
+  if(val === null || val === undefined) return "";
+  const v = val.toString().trim();
+  const norm = v.toLowerCase().replace(/\s+/g," ");
+  if(EMPTY_FLAG_VALUES.has(norm)) return "";
+
+  // Angka nol dalam berbagai format juga dianggap tidak aktif.
+  const numeric = norm.replace(/%/g,"").replace(/\./g,"").replace(",", ".");
+  if(/^[-+]?\d+(?:\.\d+)?$/.test(numeric) && Number(numeric) === 0) return "";
   return v;
+}
+
+// Membuat pembacaan header CSV lebih tahan terhadap perbedaan penulisan, misalnya:
+// "actual prog.", "Actual Prog", "actual_prog", "ACTUAL PROG " -> dianggap header yang sama.
+function normalizeHeaderKey(key){
+  return (key || "")
+    .toString()
+    .replace(/^\uFEFF/, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+function rowValue(row, aliases, fallback=""){
+  if(!row) return fallback;
+  const keyMap = new Map();
+  Object.keys(row).forEach(k => keyMap.set(normalizeHeaderKey(k), row[k]));
+  for(const alias of aliases){
+    const key = normalizeHeaderKey(alias);
+    if(keyMap.has(key)){
+      const value = keyMap.get(key);
+      if(value !== undefined && value !== null) return value;
+    }
+  }
+  return fallback;
+}
+
+function parseSheetNumber(value){
+  if(value === null || value === undefined || value === "") return 0;
+  if(typeof value === "number") return Number.isFinite(value) ? value : 0;
+  let s = value.toString().trim().replace(/%/g, "").replace(/\s/g, "");
+  if(!s) return 0;
+  // Untuk angka persentase, dukung 75,5 dan 75.5.
+  if(s.includes(",") && !s.includes(".")) s = s.replace(",", ".");
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function normalizeStageValue(value){
+  const raw = (value || "").toString().trim();
+  const s = raw.toLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ");
+  if(!s) return "tanpa status";
+
+  // Canonical stage supaya variasi penulisan di CSV tetap terbaca oleh scorecard.
+  if(
+    s === "on progress" || s === "onprogress" || s === "progress" ||
+    s === "ongoing" || s === "berjalan" || s === "sedang berjalan" ||
+    s === "proses" || s === "dalam proses"
+  ) return "on progress";
+  if(
+    s === "selesai" || s === "done" || s === "complete" ||
+    s === "completed" || s === "finish" || s === "finished"
+  ) return "selesai";
+  return s;
 }
 
 
@@ -1001,7 +1063,7 @@ function deriveFields(list){
     // Ini BEDA dari p.status di atas (yang merupakan status risiko hasil hitungan otomatis).
     p.stage = (p.stage || "").toString().trim();
     if(!p.stage) p.stage = "Tanpa Status"; // kolom Status kosong/tidak terbaca di sheet -> JANGAN dianggap "On Progress"
-    p.stageNorm = p.stage.toLowerCase();
+    p.stageNorm = normalizeStageValue(p.stage);
     // "statusBank" = kolom status pengajuan bank per unit di CSV PROYEK.
     // Tidak kosong = unit berstatus SP3K. Kosong = unit dihitung Ready Stock.
     p.statusBank = (p.statusBank || "").toString().trim();
@@ -1034,22 +1096,22 @@ async function loadData(){
     const text = await res.text();
     const parsed = Papa.parse(text, {header:true, skipEmptyLines:true});
     const mapped = parsed.data.map(row=>({
-      name: (row.name || row.Name || row.Nama || "").toString().trim(),
-      region: (row.region || row.Region || row.Wilayah || "").toString().trim(),
-      pic: (row.pic || row.PIC || "").toString().trim(),
-      planned: Number(row.planned || row["Target %"] || row.Target || 0),
-      actual: Number(row.actual || row["Realisasi %"] || row.Realisasi || 0),
-      deadline: (row.deadline || row.Deadline || "").toString().trim(),
-      stage: (row.stage || row.Stage || row.status || row.Status || "").toString().trim(),
-      statusBank: (row.status_bank || row["Status Bank"] || row.statusBank || row["status bank"] || "").toString().trim(),
-      actualProg: (row["actual prog."] || row["Actual Prog."] || row["actual prog"] || row["Actual Prog"] || row.actualProg || "").toString().trim(),
-      ontime: (row.ontime || row.Ontime || row["On Time"] || row["on time"] || row.OnTime || "").toString().trim(),
-      budgetTarget: parseMoney(firstDefined(row, [
-        "budget target","Budget Target","BUDGET TARGET","budget_target","budgetTarget","RAB","rab"
-      ])),
-      budgetAct: parseMoney(firstDefined(row, [
-        "budget act","Budget Act","BUDGET ACT","budget_act","budgetAct","Actual Cost","actual cost"
-      ])),
+      name: rowValue(row,["name","nama","nama proyek","project name"]).toString().trim(),
+      region: rowValue(row,["region","wilayah","area"]).toString().trim(),
+      pic: rowValue(row,["pic","penanggung jawab","penanggungjawab"]).toString().trim(),
+      planned: parseSheetNumber(rowValue(row,["planned","target %","target","plan"])),
+      actual: parseSheetNumber(rowValue(row,["actual","realisasi %","realisasi","actual progress %"])),
+      deadline: rowValue(row,["deadline","due date","duedate"]).toString().trim(),
+      stage: rowValue(row,["stage","status","status proyek","project status"]).toString().trim(),
+      statusBank: rowValue(row,["status_bank","status bank","statusbank"]).toString().trim(),
+      actualProg: rowValue(row,["actual prog.","actual prog","actualprog","actual progress","potential late","potentiallate"]).toString().trim(),
+      ontime: rowValue(row,["ontime","on time","on_time","on track","ontrack"]).toString().trim(),
+      budgetTarget: parseMoney(rowValue(row,[
+        "budget target","budget_target","budgettarget","RAB"
+      ], null)),
+      budgetAct: parseMoney(rowValue(row,[
+        "budget act","budget_act","budgetact","Actual Cost"
+      ], null)),
     })).filter(p=>p.name);
     if(!mapped.length) throw new Error("Sheet kosong atau kolom tidak sesuai");
     setSyncInfo("Terhubung ke Google Sheets · " + new Date().toLocaleTimeString("id-ID"));
@@ -1358,6 +1420,52 @@ function renderCostChart(topIndex, bottomIndex){
   });
 }
 
+function isOnProgressProject(p){
+  return p && p.stageNorm === "on progress";
+}
+function isActiveProjectFlag(value){
+  return normalizeFlag(value) !== "";
+}
+
+function renderProjectProgressScorecards(data){
+  const totalBangun = data.length;
+  const onProgressData = data.filter(isOnProgressProject);
+  const totalOngoing = onProgressData.length;
+  const ongoingRatio = totalBangun ? (totalOngoing / totalBangun) * 100 : 0;
+
+  // Hanya proyek On Progress yang menjadi denominator On Track & Potential Late.
+  // Nilai 0/FALSE/Tidak Ada/dll tidak dianggap sebagai flag aktif.
+  const totalOnTrack = onProgressData.filter(p => isActiveProjectFlag(p.ontime)).length;
+  const onTrackRatio = totalOngoing ? (totalOnTrack / totalOngoing) * 100 : 0;
+
+  const totalLate = onProgressData.filter(p => isActiveProjectFlag(p.actualProg)).length;
+  const lateRatio = totalOngoing ? (totalLate / totalOngoing) * 100 : 0;
+
+  // ---- Total Progress ----
+  document.getElementById("kpiProgress").textContent = totalOngoing;
+  document.getElementById("kpiProgressFoot").textContent = totalBangun
+    ? `${Math.round(ongoingRatio)}% dari ${totalBangun} proyek terfilter`
+    : "tidak ada data";
+  document.getElementById("dialProgress").textContent = totalOngoing;
+  document.getElementById("dialProgressWrap").style.setProperty("--pct", Math.max(0,Math.min(100,ongoingRatio)));
+
+  // ---- On Track ----
+  document.getElementById("kpiOnTrack").textContent = totalOnTrack;
+  document.getElementById("kpiOnTrackFoot").textContent = totalOngoing
+    ? `${Math.round(onTrackRatio)}% dari ${totalOngoing} proyek On Progress`
+    : "tidak ada proyek On Progress";
+  document.getElementById("dialOnTrack").textContent = totalOnTrack;
+  document.getElementById("dialOnTrackWrap").style.setProperty("--pct", Math.max(0,Math.min(100,onTrackRatio)));
+
+  // ---- Potential Late ----
+  document.getElementById("kpiLate").textContent = totalLate;
+  document.getElementById("kpiLateFoot").textContent = totalOngoing
+    ? `${Math.round(lateRatio)}% dari ${totalOngoing} proyek On Progress`
+    : "tidak ada proyek On Progress";
+  document.getElementById("dialLate").textContent = totalLate;
+  document.getElementById("dialLateWrap").style.setProperty("--pct", Math.max(0,Math.min(100,lateRatio)));
+}
+
 /* =====================================================================
    TIGA SCORECARD KPI ATAS (Total Progress / On Track / Potential Late)
    - Total Progress  = COUNTIF kolom "Status/stage" bernilai "On Progress"
@@ -1372,37 +1480,15 @@ function renderCostChart(topIndex, bottomIndex){
 function render(){
   const data = getFiltered();
 
+  // KPI progress dirender terlebih dahulu dan berdiri sendiri.
+  // Dengan ini, error pada chart/scorecard biaya tidak akan menghentikan tiga KPI utama.
+  renderProjectProgressScorecards(data);
   renderScorecardBangun(data);
-  renderCostScorecard(data);
-
-  const totalBangun = data.length; // COUNTA: jumlah baris proyek (bernama) yang lolos filter aktif
-  const onProgressData = data.filter(p=>p.stageNorm === "on progress");
-  const totalOngoing = onProgressData.length;
-  const ongoingRatio = totalBangun ? (totalOngoing/totalBangun)*100 : 0;
-
-  const totalOnTrack = onProgressData.filter(p=>p.ontime !== "").length;
-  const onTrackRatio = totalOngoing ? (totalOnTrack/totalOngoing)*100 : 0;
-
-  const totalLate = onProgressData.filter(p=>p.actualProg !== "").length;
-  const lateRatio = totalOngoing ? (totalLate/totalOngoing)*100 : 0;
-
-  // ---- Total Progress ----
-  document.getElementById("kpiProgress").textContent = totalOngoing;
-  document.getElementById("kpiProgressFoot").textContent = totalBangun ? Math.round(ongoingRatio)+"% berstatus On Progress" : "tidak ada data";
-  document.getElementById("dialProgress").textContent = "⏳";
-  document.getElementById("dialProgressWrap").style.setProperty("--pct", ongoingRatio);
-
-  // ---- On Track ----
-  document.getElementById("kpiOnTrack").textContent = totalOnTrack;
-  document.getElementById("kpiOnTrackFoot").textContent = totalOngoing ? Math.round(onTrackRatio)+"% dari proyek On Progress" : "tidak ada data";
-  document.getElementById("dialOnTrack").textContent = totalOnTrack;
-  document.getElementById("dialOnTrackWrap").style.setProperty("--pct", onTrackRatio);
-
-  // ---- Potential Late ----
-  document.getElementById("kpiLate").textContent = totalLate;
-  document.getElementById("kpiLateFoot").textContent = totalOngoing ? Math.round(lateRatio)+"% dari proyek On Progress" : "tidak ada data";
-  document.getElementById("dialLate").textContent = totalLate;
-  document.getElementById("dialLateWrap").style.setProperty("--pct", lateRatio);
+  try{
+    renderCostScorecard(data);
+  }catch(err){
+    console.error("Average Cost scorecard gagal dirender, KPI progress tetap berjalan.", err);
+  }
 
   const sorted = [...data].sort((a,b)=>{
     let va=a[sortKey], vb=b[sortKey];
@@ -1845,8 +1931,10 @@ document.getElementById("btnSync").addEventListener("click", async ()=>{
 setInterval(async ()=>{
   PROJECTS = deriveFields(await loadData());
   STATUS_BANK = await loadStatusBank();
+  populateFilters();
   render();
   EMPLOYEES = deriveEmployeeFields(await loadEmployeeData());
+  populateEmployeeFilters();
   renderEmployees();
 }, 5 * 60 * 1000);
 
