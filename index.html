@@ -396,6 +396,34 @@
   }
   .quality-chart-note strong{font-weight:700;color:#4b5567;}
 
+  /* ===== Scorecard: Time Summary Done Bangun ===== */
+  .time-scorecard{margin-top:0;}
+  .time-metric-value{
+    display:flex; align-items:baseline; gap:6px;
+    font-size:clamp(16px, 1.45vw, 20px) !important;
+    letter-spacing:-.2px !important;
+  }
+  .time-metric-value .time-unit{
+    font-size:10.5px; font-weight:500; color:var(--text-dim);
+    letter-spacing:0; font-style:italic;
+  }
+  .time-details{grid-template-columns:1fr 1fr;}
+  .time-detail-text{font-size:12.5px; line-height:1.55; white-space:pre-line;}
+  .time-extreme-value{
+    font-size:20px; line-height:1.1; font-weight:800; color:var(--text);
+    letter-spacing:-.15px; white-space:nowrap;
+  }
+  .time-target-marker{
+    position:absolute; top:0; bottom:20px; width:0;
+    border-left:1px dashed #d98e21; z-index:3; pointer-events:none;
+  }
+  .time-target-marker span{
+    position:absolute; top:-18px; left:0; transform:translateX(-50%);
+    white-space:nowrap; font-size:10px; font-weight:600; color:#a45a00;
+    background:#fffdf9; padding:0 4px;
+  }
+  .time-chart-note strong{font-weight:700;color:#4b5567;}
+
   /* ===== Panels ===== */
   .panel{
     background:var(--panel); border:1px solid var(--line); border-radius:10px;
@@ -797,6 +825,83 @@
         </div>
       </section>
 
+      <!-- ===== Scorecard: Time Summary / proyek Status=Selesai ===== -->
+      <section class="cost-scorecard time-scorecard" id="timeScorecard">
+        <div class="cost-head">
+          <div class="cost-title-wrap">
+            <h2>Time Summary — Done Bangun</h2>
+            <div class="cost-subtitle">Ringkasan waktu aktual proyek berstatus Selesai, mengikuti filter Wilayah dan PIC aktif.</div>
+          </div>
+          <div class="cost-badge" id="timeDoneCount">0 proyek selesai</div>
+        </div>
+
+        <div class="cost-layout">
+          <div class="cost-left">
+            <div class="cost-metrics">
+              <div class="cost-metric">
+                <div class="cost-metric-label">Target Time</div>
+                <div class="cost-metric-value time-metric-value"><span id="timeTarget">42</span><span class="time-unit">hari</span></div>
+              </div>
+              <div class="cost-metric">
+                <div class="cost-metric-label">AVG Actual Time</div>
+                <div class="cost-metric-value time-metric-value"><span id="timeAvgActual">—</span><span class="time-unit">hari</span></div>
+              </div>
+              <div class="cost-metric">
+                <div class="cost-metric-label">Actual / Target</div>
+                <div class="cost-metric-value time-metric-value" id="timePct">—</div>
+              </div>
+            </div>
+
+            <div class="cost-details time-details">
+              <div class="cost-detail top">
+                <div class="cost-detail-label">Top Actual Time</div>
+                <div class="cost-detail-text time-detail-text" id="timeTopDetail">Tidak ada data</div>
+                <div class="cost-detail-meta">Nilai act time terendah pada proyek selesai</div>
+              </div>
+              <div class="cost-detail bottom">
+                <div class="cost-detail-label">Bottom Actual Time</div>
+                <div class="cost-detail-text time-detail-text" id="timeBottomDetail">Tidak ada data</div>
+                <div class="cost-detail-meta">Nilai act time tertinggi pada proyek selesai</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cost-chart-card">
+            <div class="cost-extremes">
+              <div class="cost-extreme">
+                <div class="cost-extreme-label">Top <span class="down">▼</span></div>
+                <div class="time-extreme-value" id="timeTopValue">—</div>
+              </div>
+              <div class="cost-extreme">
+                <div class="cost-extreme-label">Bottom <span class="up">▲</span></div>
+                <div class="time-extreme-value" id="timeBottomValue">—</div>
+              </div>
+            </div>
+
+            <div class="cost-chart-wrap" id="timeChartWrap">
+              <div class="cost-css-chart" id="timeCssChart">
+                <div class="cost-css-plot">
+                  <div class="time-target-marker" id="timeTargetMarker"><span>Target 42 hari</span></div>
+                  <div class="cost-chart-row">
+                    <div class="cost-row-label">TOP</div>
+                    <div class="cost-bar-track"><div class="cost-bar-fill top" id="timeTopBar"></div></div>
+                    <div class="cost-row-value" id="timeTopChartText">0 hari</div>
+                  </div>
+                  <div class="cost-chart-row">
+                    <div class="cost-row-label">BOTTOM</div>
+                    <div class="cost-bar-track"><div class="cost-bar-fill bottom" id="timeBottomBar"></div></div>
+                    <div class="cost-row-value" id="timeBottomChartText">0 hari</div>
+                  </div>
+                  <div class="cost-axis-scale"><span>0</span><span id="timeAxisMaxText">50 hari</span></div>
+                </div>
+              </div>
+              <div class="cost-chart-empty" id="timeChartEmpty" style="display:none;">Tidak ada data act time proyek selesai untuk ditampilkan.</div>
+            </div>
+            <div class="cost-chart-note time-chart-note"><strong>Batas target = 42 hari</strong> — semakin rendah semakin cepat</div>
+          </div>
+        </div>
+      </section>
+
       <div class="row-2col">
         <div class="panel" id="progressPanel">
           <div class="panel-head">
@@ -1148,6 +1253,20 @@ function parseNullableNumber(value){
   return Number.isFinite(n) ? n : null;
 }
 
+// Parser khusus durasi agar header act time tetap terbaca bila CSV berisi
+// angka murni (37), desimal (37,5), maupun teks seperti "37 hari" / "37 days".
+function parseDurationNumber(value){
+  if(value === null || value === undefined) return null;
+  if(typeof value === "number") return Number.isFinite(value) ? value : null;
+  let s = value.toString().trim().toLowerCase();
+  if(!s) return null;
+  s = s.replace(",", ".");
+  const match = s.match(/[-+]?\d+(?:\.\d+)?/);
+  if(!match) return null;
+  const n = Number(match[0]);
+  return Number.isFinite(n) ? n : null;
+}
+
 function normalizeStageValue(value){
   const raw = (value || "").toString().trim();
   const s = raw.toLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ");
@@ -1272,6 +1391,9 @@ function deriveFields(list){
     // Kolom AFS untuk scorecard Quality Summary. Kosong tetap null agar tidak
     // keliru dihitung sebagai 0 pada average/minimum.
     p.afs = parseNullableNumber(p.afs);
+    // Kolom waktu aktual untuk scorecard Time Summary. Kosong tetap null agar
+    // tidak ikut memengaruhi average/min/max.
+    p.actTime = parseDurationNumber(p.actTime);
   });
   return list;
 }
@@ -1306,6 +1428,10 @@ async function loadData(){
       ], null)),
       afs: parseNullableNumber(rowValue(row,[
         "afs","actual afs","afs actual","quality afs","afs complain","complain afs"
+      ], null)),
+      actTime: parseDurationNumber(rowValue(row,[
+        "act time","act_time","acttime","actual time","actual_time","actualtime",
+        "actual days","actual duration","duration actual","waktu aktual","lama aktual"
       ], null)),
     })).filter(p=>p.name);
     if(!mapped.length) throw new Error("Sheet kosong atau kolom tidak sesuai");
@@ -1717,6 +1843,116 @@ function renderQualityChart(minAfs, maxAfs){
   axisText.textContent = formatAfs(axisMax, true);
 }
 
+/* =====================================================================
+   SCORECARD TIME SUMMARY — hanya proyek dengan Status/stage = "Selesai"
+   dan tetap mengikuti filter Wilayah + PIC karena menerima `data` dari
+   getFiltered().
+
+   Target Time      = 42 hari (tetap)
+   AVG Actual Time  = AVERAGE header "act time" pada proyek selesai
+   %                 = AVG Actual Time / 42 x 100%
+   TOP               = MIN act time pada proyek selesai
+   BOTTOM            = MAX act time pada proyek selesai
+   Top/Bottom detail = Region | Name | act time; jika ada nilai ekstrem yang
+                       sama, seluruh proyek dengan nilai yang sama ditampilkan
+   Chart             = MIN vs MAX act time dengan garis target 42 hari
+===================================================================== */
+const TIME_TARGET_DAYS = 42;
+
+function formatDays(value, withUnit=false){
+  if(value === null || value === undefined || !Number.isFinite(Number(value))) return "—";
+  const n = Number(value);
+  const txt = n.toLocaleString("id-ID", {maximumFractionDigits:2});
+  return withUnit ? `${txt} hari` : txt;
+}
+
+function renderTimeScorecard(data){
+  const done = data.filter(p => p.stageNorm === "selesai");
+  // Nilai negatif tidak masuk akal untuk durasi, sehingga dikeluarkan.
+  // Nilai 0 tetap valid bila memang tercatat di CSV.
+  const timeRows = done.filter(p => Number.isFinite(p.actTime) && p.actTime >= 0);
+
+  const avgTime = timeRows.length
+    ? timeRows.reduce((sum,p)=>sum+p.actTime,0) / timeRows.length
+    : null;
+
+  const minTime = timeRows.length ? Math.min(...timeRows.map(p=>p.actTime)) : null;
+  const maxTime = timeRows.length ? Math.max(...timeRows.map(p=>p.actTime)) : null;
+
+  const topRows = Number.isFinite(minTime)
+    ? timeRows.filter(p => Math.abs(p.actTime - minTime) < 1e-9)
+    : [];
+  const bottomRows = Number.isFinite(maxTime)
+    ? timeRows.filter(p => Math.abs(p.actTime - maxTime) < 1e-9)
+    : [];
+
+  // Sesuai instruksi: AVG Actual Time dibagi target 42 hari.
+  const ratioPct = Number.isFinite(avgTime)
+    ? (avgTime / TIME_TARGET_DAYS) * 100
+    : null;
+
+  document.getElementById("timeDoneCount").textContent = `${done.length} proyek selesai`;
+  document.getElementById("timeTarget").textContent = TIME_TARGET_DAYS.toLocaleString("id-ID");
+  document.getElementById("timeAvgActual").textContent = formatDays(avgTime);
+  document.getElementById("timePct").textContent = ratioPct === null ? "—" : formatPct(ratioPct,1);
+
+  document.getElementById("timeTopValue").textContent = Number.isFinite(minTime) ? formatDays(minTime, true) : "—";
+  document.getElementById("timeBottomValue").textContent = Number.isFinite(maxTime) ? formatDays(maxTime, true) : "—";
+
+  document.getElementById("timeTopDetail").textContent = topRows.length
+    ? topRows.map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatDays(p.actTime, true)}`).join("\n")
+    : "Tidak ada data act time proyek selesai";
+
+  document.getElementById("timeBottomDetail").textContent = bottomRows.length
+    ? bottomRows.map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatDays(p.actTime, true)}`).join("\n")
+    : "Tidak ada data act time proyek selesai";
+
+  renderTimeChart(minTime, maxTime);
+}
+
+function renderTimeChart(minTime, maxTime){
+  const chartEl = document.getElementById("timeCssChart");
+  const emptyEl = document.getElementById("timeChartEmpty");
+  const topBar = document.getElementById("timeTopBar");
+  const bottomBar = document.getElementById("timeBottomBar");
+  const topText = document.getElementById("timeTopChartText");
+  const bottomText = document.getElementById("timeBottomChartText");
+  const marker = document.getElementById("timeTargetMarker");
+  const axisText = document.getElementById("timeAxisMaxText");
+
+  if(!chartEl || !emptyEl || !topBar || !bottomBar || !topText || !bottomText || !marker || !axisText){
+    console.warn("Elemen chart Time Summary tidak lengkap.");
+    return;
+  }
+
+  const hasData = Number.isFinite(minTime) || Number.isFinite(maxTime);
+  if(!hasData){
+    chartEl.style.display = "none";
+    emptyEl.style.display = "flex";
+    return;
+  }
+
+  chartEl.style.display = "block";
+  emptyEl.style.display = "none";
+
+  const safeMin = Number.isFinite(minTime) ? Math.max(0, Number(minTime)) : 0;
+  const safeMax = Number.isFinite(maxTime) ? Math.max(0, Number(maxTime)) : 0;
+
+  // Axis selalu memuat target 42 hari dan nilai BOTTOM, dengan ruang ekstra agar
+  // marker target tidak berhimpitan dengan tepi chart.
+  const rawMax = Math.max(safeMin, safeMax, TIME_TARGET_DAYS);
+  const step = rawMax <= 60 ? 10 : rawMax <= 120 ? 20 : 50;
+  const axisMax = Math.ceil((rawMax * 1.12) / step) * step;
+
+  const toWidth = value => Math.max(0, Math.min(100, (value / axisMax) * 100));
+  topBar.style.width = toWidth(safeMin) + "%";
+  bottomBar.style.width = toWidth(safeMax) + "%";
+  topText.textContent = formatDays(safeMin, true);
+  bottomText.textContent = formatDays(safeMax, true);
+  marker.style.left = toWidth(TIME_TARGET_DAYS) + "%";
+  axisText.textContent = formatDays(axisMax, true);
+}
+
 function isOnProgressProject(p){
   return p && p.stageNorm === "on progress";
 }
@@ -1790,6 +2026,11 @@ function render(){
     renderQualityScorecard(data);
   }catch(err){
     console.error("Quality Summary scorecard gagal dirender, fungsi dashboard lain tetap berjalan.", err);
+  }
+  try{
+    renderTimeScorecard(data);
+  }catch(err){
+    console.error("Time Summary scorecard gagal dirender, fungsi dashboard lain tetap berjalan.", err);
   }
 
   const sorted = [...data].sort((a,b)=>{
