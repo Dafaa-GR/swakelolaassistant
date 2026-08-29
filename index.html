@@ -178,7 +178,7 @@
     padding:20px 26px; margin-bottom:16px;
     display:flex; align-items:stretch; gap:26px; flex-wrap:wrap;
   }
-  .sb-left{display:flex; align-items:center; gap:16px; flex:1.3; min-width:280px;}
+  .sb-left{display:flex; align-items:center; gap:16px; flex:1.15; min-width:270px;}
   .sb-icon{
     width:64px;height:64px;border-radius:50%;
     border:5px solid var(--blue); background:#fff;
@@ -194,6 +194,32 @@
   .sb-sub-num{font-size:20px;font-weight:800;color:var(--text);}
   .sb-sub-num sup{font-size:12px;font-weight:700;color:var(--text-dim);margin-left:2px;}
   .sb-sub-label{font-size:10.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
+
+  /* Done Bangun — bagian dari scorecard Total Bangun */
+  .sb-done{
+    flex:.82; min-width:225px; display:flex; align-items:center; gap:14px;
+    padding:2px 2px 2px 0;
+  }
+  .sb-done-icon{
+    width:58px; height:58px; border-radius:50%; flex-shrink:0;
+    border:5px solid #348c4b; background:#fff;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .sb-done-icon svg{width:28px;height:28px;fill:none;stroke:#348c4b;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;}
+  .sb-done-body{min-width:0;}
+  .sb-done-label{
+    font-size:12.5px; font-weight:800; letter-spacing:.3px; color:#4b5567;
+    text-transform:uppercase; margin-bottom:2px;
+  }
+  .sb-done-value{
+    display:flex; align-items:baseline; gap:5px; line-height:1;
+    color:var(--text); white-space:nowrap;
+  }
+  .sb-done-value b{font-size:34px;font-weight:800;}
+  .sb-done-value span{font-size:14px;font-weight:700;color:var(--text-dim);}
+  .sb-done-pct{margin-top:8px;line-height:1.05;}
+  .sb-done-pct b{display:block;font-size:22px;font-weight:800;color:var(--text);}
+  .sb-done-pct span{display:block;font-size:10.5px;color:var(--text-dim);margin-top:2px;}
   .sb-divider-v{width:1px;align-self:stretch;background:var(--line);flex-shrink:0;}
   .sb-right{flex:1;min-width:230px;display:flex;flex-direction:column;justify-content:center;gap:14px;}
   .sb-right-row{}
@@ -629,6 +655,18 @@
             </div>
           </div>
         </div>
+
+        <div class="sb-done" aria-label="Done Bangun">
+          <div class="sb-done-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg>
+          </div>
+          <div class="sb-done-body">
+            <div class="sb-done-label">Done Bangun</div>
+            <div class="sb-done-value"><b id="sbDoneBangun">0</b><span>unit</span></div>
+            <div class="sb-done-pct"><b id="sbDoneBangunPct">0%</b><span>dari total bangun</span></div>
+          </div>
+        </div>
+
         <div class="sb-divider-v"></div>
         <div class="sb-right">
           <div class="sb-right-row">
@@ -1526,6 +1564,9 @@ function formatDate(d){
 /* =====================================================================
    SCORECARD TOTAL BANGUN — logika perhitungan
    1. Total Bangun          = jumlah baris proyek yang lolos filter (COUNTA)
+   1a. Done Bangun          = COUNTIF header Status = "Selesai" pada data yang
+                              sudah lolos filter Wilayah + PIC. Persentase =
+                              Done Bangun / Total Bangun.
    2. Total SP3K Muncul     = SUM angka pada kolom "Total SP3K" di sumber
                               "status bank" (CSV terpisah), HANYA untuk baris
                               yang kolom "region"-nya SAMA dengan wilayah yang
@@ -1553,6 +1594,12 @@ function formatDate(d){
 ===================================================================== */
 function renderScorecardBangun(data){
   const totalBangun = data.length;
+  // Done Bangun = jumlah baris pada CSV proyek yang header Status-nya bernilai "Selesai".
+  // `data` sudah merupakan hasil filter Wilayah + PIC, sehingga Done Bangun otomatis
+  // mengikuti filter aktif yang sama dengan Total Bangun.
+  const doneBangun = data.filter(p => p.stageNorm === "selesai").length;
+  const pctDoneBangun = totalBangun ? (doneBangun / totalBangun) * 100 : 0;
+
   const projSp3kCount = data.filter(p=>p.statusBank !== "").length;
   const projReadyCount = data.filter(p=>p.statusBank === "").length;
 
@@ -1578,6 +1625,8 @@ function renderScorecardBangun(data){
   const pctReadyBottom = totalBangun ? (projReadyCount / totalBangun) * 100 : 0;
 
   document.getElementById("sbTotalBangun").textContent = totalBangun;
+  document.getElementById("sbDoneBangun").textContent = doneBangun;
+  document.getElementById("sbDoneBangunPct").textContent = Math.round(pctDoneBangun) + "%";
 
   document.getElementById("sbSp3kCount").firstChild.textContent = projSp3kCount;
   document.getElementById("sbSp3kPct").textContent = "/" + Math.round(pctSp3kBottom) + "%";
