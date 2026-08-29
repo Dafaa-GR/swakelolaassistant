@@ -847,7 +847,7 @@
                 <div class="cost-metric-value time-metric-value"><span id="timeAvgActual">—</span><span class="time-unit">hari</span></div>
               </div>
               <div class="cost-metric">
-                <div class="cost-metric-label">Actual / Target</div>
+                <div class="cost-metric-label">Target / Actual</div>
                 <div class="cost-metric-value time-metric-value" id="timePct">—</div>
               </div>
             </div>
@@ -1850,7 +1850,7 @@ function renderQualityChart(minAfs, maxAfs){
 
    Target Time      = 42 hari (tetap)
    AVG Actual Time  = AVERAGE header "act time" pada proyek selesai
-   %                 = AVG Actual Time / 42 x 100%
+   %                 = 42 / AVG Actual Time x 100%
    TOP               = MIN act time pada proyek selesai
    BOTTOM            = MAX act time pada proyek selesai
    Top/Bottom detail = Region | Name | act time; jika ada nilai ekstrem yang
@@ -1886,9 +1886,11 @@ function renderTimeScorecard(data){
     ? timeRows.filter(p => Math.abs(p.actTime - maxTime) < 1e-9)
     : [];
 
-  // Sesuai instruksi: AVG Actual Time dibagi target 42 hari.
+  // Pencapaian Time: target 42 hari dibagi AVG Actual Time.
+  // Semakin cepat actual time, semakin tinggi pencapaian.
+  // Jika actual time = 0, pencapaian dianggap 100% untuk menghindari pembagian dengan nol.
   const ratioPct = Number.isFinite(avgTime)
-    ? (avgTime / TIME_TARGET_DAYS) * 100
+    ? (avgTime === 0 ? 100 : (TIME_TARGET_DAYS / avgTime) * 100)
     : null;
 
   document.getElementById("timeDoneCount").textContent = `${done.length} proyek selesai`;
