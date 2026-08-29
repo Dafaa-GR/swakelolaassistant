@@ -559,18 +559,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
         Project Summary
       </a>
-      <a class="sb-link" data-page="projects" data-target="progressPanel">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
-        Progres Proyek
-      </a>
-      <a class="sb-link" data-page="projects" data-target="statusPanel">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 3"/></svg>
-        Status Risiko
-      </a>
-      <a class="sb-link" data-page="projects" data-target="trendPanel">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>
-        Tren Deviasi
-      </a>
       <a class="sb-link" data-page="projects" data-target="tablePanel">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         Detail Proyek
@@ -940,65 +928,30 @@
         </div>
       </section>
 
-      <div class="row-2col">
-        <div class="panel" id="progressPanel">
-          <div class="panel-head">
-            <div>
-              <h2>Progres Rencana vs Realisasi per Proyek</h2>
-              <div class="panel-sub">Perbandingan % target dan % aktual berjalan</div>
-            </div>
-            <div class="panel-lamp"><span class="dot"></span>Live</div>
-          </div>
-          <div class="chart-box"><canvas id="chartProgress"></canvas></div>
-        </div>
-        <div class="panel" id="statusPanel">
-          <div class="panel-head">
-            <div>
-              <h2>Komposisi Status Proyek</h2>
-              <div class="panel-sub">Distribusi berdasarkan status risiko</div>
-            </div>
-            <div class="panel-lamp"><span class="dot"></span>Live</div>
-          </div>
-          <div class="chart-box"><canvas id="chartStatus"></canvas></div>
-        </div>
-      </div>
-
-      <div class="panel" style="margin-bottom:20px;" id="trendPanel">
-        <div class="panel-head">
-          <div>
-            <h2>Tren Deviasi Rata-rata (6 Bulan Terakhir)</h2>
-            <div class="panel-sub">Semakin mendekati 0% semakin sesuai rencana</div>
-          </div>
-          <div class="panel-lamp"><span class="dot"></span>Live</div>
-        </div>
-        <div class="chart-box" style="height:210px;"><canvas id="chartTrend"></canvas></div>
-      </div>
+      <!-- Progres vs Realisasi, Komposisi Status, dan Tren Deviasi sementara dinonaktifkan. -->
 
       <div class="panel" id="tablePanel">
         <div class="panel-head">
           <div>
             <h2>Detail Proyek</h2>
-            <div class="panel-sub"><span id="tableCount">0</span> proyek ditampilkan — klik header kolom untuk mengurutkan</div>
+            <div class="panel-sub"><span id="tableCount">0</span> proyek selesai ditampilkan — klik header kolom untuk mengurutkan</div>
           </div>
         </div>
         <div style="overflow-x:auto;">
           <table>
             <thead>
               <tr>
-                <th data-key="name">Nama Proyek <span class="arrow">↕</span></th>
-                <th data-key="region">Wilayah <span class="arrow">↕</span></th>
-                <th data-key="pic">PIC <span class="arrow">↕</span></th>
-                <th data-key="planned">Target % <span class="arrow">↕</span></th>
-                <th data-key="actual">Realisasi <span class="arrow">↕</span></th>
-                <th data-key="deviation">Deviasi <span class="arrow">↕</span></th>
-                <th data-key="deadline">Deadline <span class="arrow">↕</span></th>
-                <th data-key="status">Status <span class="arrow">↕</span></th>
-                <th data-key="stage">Tahap <span class="arrow">↕</span></th>
+                <th data-key="region">Site <span class="arrow">↕</span></th>
+                <th data-key="name">Blok <span class="arrow">↕</span></th>
+                <th data-key="pic">PM <span class="arrow">↕</span></th>
+                <th data-key="actTime">Time <span class="arrow">↕</span></th>
+                <th data-key="budgetAct">Budget <span class="arrow">↕</span></th>
+                <th data-key="afs">AFS <span class="arrow">↕</span></th>
               </tr>
             </thead>
             <tbody id="tableBody"></tbody>
           </table>
-          <div class="empty-state" id="emptyState" style="display:none;">Tidak ada proyek yang cocok dengan filter saat ini.</div>
+          <div class="empty-state" id="emptyState" style="display:none;">Tidak ada proyek berstatus Selesai yang cocok dengan filter saat ini.</div>
         </div>
       </div>
 
@@ -1222,7 +1175,7 @@ const statusColor = {ontrack:"#1f9d63", warning:"#d98e21", late:"#e0483a"};
 
 let PROJECTS = [];
 let STATUS_BANK = [];
-let sortKey = "deviation";
+let sortKey = "region";
 let sortDir = 1;
 let charts = {};
 
@@ -1542,7 +1495,6 @@ async function boot(){
   PROJECTS = deriveFields(await loadData());
   STATUS_BANK = await loadStatusBank();
   populateFilters();
-  renderTrendChart();
   render();
 }
 
@@ -2084,9 +2036,19 @@ function render(){
     console.error("Time Summary scorecard gagal dirender, fungsi dashboard lain tetap berjalan.", err);
   }
 
-  const sorted = [...data].sort((a,b)=>{
+  // Detail Proyek sementara hanya menampilkan unit/proyek yang sudah Selesai.
+  // Filter Region + PIC tetap berlaku karena sumbernya tetap `data` dari getFiltered().
+  const detailData = data.filter(p => p.stageNorm === "selesai");
+
+  const sorted = [...detailData].sort((a,b)=>{
     let va=a[sortKey], vb=b[sortKey];
-    if(typeof va === "string"){ va=va.toLowerCase(); vb=vb.toLowerCase(); }
+    // Null/blank diletakkan di bawah agar tabel lebih nyaman dibaca.
+    const emptyA = va === null || va === undefined || va === "" || (typeof va === "number" && !Number.isFinite(va));
+    const emptyB = vb === null || vb === undefined || vb === "" || (typeof vb === "number" && !Number.isFinite(vb));
+    if(emptyA && !emptyB) return 1;
+    if(!emptyA && emptyB) return -1;
+    if(emptyA && emptyB) return 0;
+    if(typeof va === "string"){ va=va.toLowerCase(); vb=(vb || "").toString().toLowerCase(); }
     if(va<vb) return -1*sortDir;
     if(va>vb) return 1*sortDir;
     return 0;
@@ -2099,27 +2061,20 @@ function render(){
 
   sorted.forEach(p=>{
     const tr = document.createElement("tr");
-    const barColor = p.status==="late" ? "var(--red)" : p.status==="warning" ? "var(--amber)" : "var(--blue)";
+    const timeText = Number.isFinite(p.actTime) ? formatDays(p.actTime, true) : "—";
+    const budgetText = Number.isFinite(p.budgetAct) ? formatRupiah(p.budgetAct) : "—";
+    const afsText = Number.isFinite(p.afs) ? formatAfs(p.afs, true) : "—";
     tr.innerHTML = `
-      <td><div class="proj-name">${p.name}</div></td>
-      <td>${p.region}</td>
-      <td>${p.pic}</td>
-      <td>${p.planned}%</td>
-      <td>
-        <div class="progress-cell">
-          <div class="bar-track"><div class="bar-fill" style="width:${p.actual}%;background:${barColor};"></div></div>
-          <span>${p.actual}%</span>
-        </div>
-      </td>
-      <td class="${p.deviation<0?'dev-pos':(p.deviation>0?'dev-neg':'dev-zero')}">${p.deviation>0?'+':''}${p.deviation}%</td>
-      <td>${formatDate(p.deadline)}</td>
-      <td><span class="status-pill status-${p.status}"><span class="dot"></span>${statusLabel[p.status]}</span></td>
-      <td>${p.stage}</td>
+      <td>${p.region || "—"}</td>
+      <td><div class="proj-name">${p.name || "—"}</div></td>
+      <td>${p.pic || "—"}</td>
+      <td>${timeText}</td>
+      <td><strong>${budgetText}</strong></td>
+      <td>${afsText}</td>
     `;
     tbody.appendChild(tr);
   });
 
-  updateCharts(sorted);
 }
 
 function updateCharts(data){
