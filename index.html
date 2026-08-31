@@ -623,6 +623,13 @@
   .productivity-ring span{position:relative;font-size:13px;font-weight:800;color:var(--text);}
   .productivity-value{font-size:34px;font-weight:800;color:var(--text);line-height:1.05;}
   .productivity-foot{font-size:11px;color:var(--text-dim);margin-top:6px;line-height:1.45;}
+  .productivity-kpi-row{display:flex;align-items:stretch;gap:10px;margin-top:10px;flex-wrap:wrap;}
+  .productivity-kpi-mini{min-width:112px;border:1px solid var(--line);background:var(--panel-2);border-radius:8px;padding:9px 11px;}
+  .productivity-kpi-mini .label{font-size:9.5px;font-weight:800;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;}
+  .productivity-kpi-mini .value{font-size:18px;font-weight:800;color:var(--text);margin-top:4px;line-height:1;}
+  .productivity-kpi-mini.achievement .value{color:var(--blue);}
+  .productivity-kpi-mini.achievement.achieved .value{color:var(--green);}
+  .productivity-kpi-mini.achievement.below .value{color:var(--red);}
   .productivity-weeks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:auto;}
   .productivity-week{border:1px solid var(--line);background:var(--panel-2);border-radius:8px;padding:10px 11px;text-align:center;min-width:0;}
   .productivity-week-label{font-size:9.5px;font-weight:800;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;}
@@ -1277,6 +1284,16 @@
             <div class="productivity-ring" id="mpProductivityRing" style="--pct:0"><span id="mpProductivityDial">—</span></div>
             <div>
               <div class="productivity-value" id="mpProductivity">—</div>
+              <div class="productivity-kpi-row">
+                <div class="productivity-kpi-mini">
+                  <div class="label">Target Produktivitas</div>
+                  <div class="value" id="mpProductivityTarget">2,50%</div>
+                </div>
+                <div class="productivity-kpi-mini achievement" id="mpProductivityAchievementCard">
+                  <div class="label">Achievement</div>
+                  <div class="value" id="mpProductivityAchievement">—</div>
+                </div>
+              </div>
               <div class="productivity-foot" id="mpProductivityFoot">Menunggu data prod w1–w4.</div>
             </div>
           </div>
@@ -2445,6 +2462,7 @@ document.getElementById("btnReset").addEventListener("click", ()=>{
    - Produktivitas = hanya proyek Status On Progress. Setiap W1-W4 dihitung
      average atas angka valid; teks seperti "tidak ada" otomatis diabaikan.
      Angka besar = average seluruh angka valid prod w1-w4.
+   - Target Produktivitas = 2,50%. Achievement = Average Produktivitas / 2,50% * 100.
 ===================================================================== */
 function populateManpowerFilters(){
   const regions=[...new Set(PROJECTS.map(p=>p.region).filter(Boolean))].sort();
@@ -2507,6 +2525,8 @@ function renderActiveWorkerList(){
   });
 }
 
+const MANPOWER_PRODUCTIVITY_TARGET = 2.50;
+
 function renderManpower(){
   const page=document.getElementById("pageManpower"); if(!page) return;
   const data=getFilteredManpower();
@@ -2538,16 +2558,27 @@ function renderManpower(){
   setProductivityWeek(4,w4);
 
   const v=document.getElementById("mpProductivity"), d=document.getElementById("mpProductivityDial"), ring=document.getElementById("mpProductivityRing"), foot=document.getElementById("mpProductivityFoot");
+  const achEl=document.getElementById("mpProductivityAchievement");
+  const achCard=document.getElementById("mpProductivityAchievementCard");
   if(overall===null){
     v.textContent="—";
     d.textContent="—";
     ring.style.setProperty("--pct",0);
+    if(achEl) achEl.textContent="—";
+    if(achCard) achCard.classList.remove("achieved","below");
     foot.textContent=`${onProgress.length} proyek On Progress · belum ada angka valid pada prod w1–w4.`;
   }else{
-    v.textContent=formatPct(overall,1);
-    d.textContent=Math.round(overall)+"%";
-    ring.style.setProperty("--pct",Math.max(0,Math.min(overall,100)));
-    foot.textContent=`Average ${all.length} data produktivitas valid dari ${onProgress.length} proyek On Progress.`;
+    const achievement = MANPOWER_PRODUCTIVITY_TARGET > 0 ? (overall / MANPOWER_PRODUCTIVITY_TARGET) * 100 : 0;
+    v.textContent=formatPct(overall,2);
+    d.textContent=Math.round(achievement)+"%";
+    ring.style.setProperty("--pct",Math.max(0,Math.min(achievement,100)));
+    if(achEl) achEl.textContent=formatPct(achievement,1);
+    if(achCard){
+      achCard.classList.toggle("achieved", achievement>=100);
+      achCard.classList.toggle("below", achievement<100);
+    }
+    const statusText = achievement>=100 ? "target tercapai" : "belum mencapai target";
+    foot.textContent=`Average ${all.length} data produktivitas valid dari ${onProgress.length} proyek On Progress · ${statusText}.`;
   }
 
   // Daftar tukang aktif sengaja tidak menerima filter Region/PIC.
