@@ -856,11 +856,69 @@
     border-radius:20px;
     white-space:nowrap;
   }
+  .reduce-budget-body{
+    display:grid;
+    grid-template-columns:minmax(210px,.34fr) minmax(0,1fr);
+    gap:16px;
+    align-items:stretch;
+    margin-top:8px;
+  }
+  .reduce-budget-insights{
+    display:grid;
+    grid-template-rows:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+  .reduce-insight{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 14px 12px;
+    background:#fafbfc;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .reduce-insight.overbudget{
+    border-left:4px solid var(--red);
+    background:linear-gradient(90deg,rgba(224,72,58,.045),#fff 26%);
+  }
+  .reduce-insight.top-reduce{
+    border-left:4px solid var(--green);
+    background:linear-gradient(90deg,rgba(31,157,99,.045),#fff 26%);
+  }
+  .reduce-insight-label{
+    font-size:10px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.45px;
+    color:var(--text-dim);
+    margin-bottom:5px;
+  }
+  .reduce-insight.overbudget .reduce-insight-label{color:var(--red);}
+  .reduce-insight.top-reduce .reduce-insight-label{color:var(--green);}
+  .reduce-insight-value{
+    font-size:20px;
+    font-weight:800;
+    color:var(--text);
+    line-height:1.15;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .reduce-insight-meta{
+    margin-top:6px;
+    font-size:10.5px;
+    line-height:1.35;
+    color:var(--text-dim);
+    overflow-wrap:anywhere;
+  }
+  .reduce-insight-meta b{color:#475467;font-weight:700;}
   .reduce-budget-chart-wrap{
     position:relative;
     width:100%;
     height:245px;
-    margin-top:6px;
+    margin-top:0;
+    min-width:0;
   }
   #reduceBudgetChart{
     width:100%;
@@ -906,6 +964,14 @@
   .reduce-budget-empty{
     height:100%;display:flex;align-items:center;justify-content:center;
     text-align:center;color:var(--text-dim);font-size:11.5px;padding:20px;
+  }
+  @media(max-width:820px){
+    .reduce-budget-body{grid-template-columns:1fr;}
+    .reduce-budget-insights{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto;}
+  }
+  @media(max-width:520px){
+    .reduce-budget-insights{grid-template-columns:1fr;}
+    .reduce-insight-value{font-size:18px;}
   }
   @media(max-width:700px){
     .reduce-budget-card{padding:15px 14px 12px;}
@@ -962,6 +1028,28 @@
   #reduceBudgetChart{display:block !important;min-height:245px;}
   #reduceBudgetChart:empty::before{content:"Memuat chart Reduce Budget…";display:flex;align-items:center;justify-content:center;height:245px;color:var(--text-dim);font-size:11.5px;}
   .reduce-budget-empty{min-height:245px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--text-dim);font-size:11.5px;line-height:1.55;padding:18px;}
+
+  /* Selisih Budget integrated into Top/Bottom Actual Cost */
+  .cost-budget-diff{
+    display:inline-flex;
+    align-items:center;
+    width:max-content;
+    max-width:100%;
+    margin-top:7px;
+    padding:4px 8px;
+    border-radius:6px;
+    font-size:10.5px;
+    line-height:1.25;
+    font-weight:800;
+    letter-spacing:.05px;
+    background:#f3f5f8;
+    border:1px solid #e4e8ef;
+    color:#667085;
+  }
+  .cost-budget-diff.positive{background:var(--green-bg);border-color:#cdeeda;color:var(--green);}
+  .cost-budget-diff.negative{background:var(--red-bg);border-color:#f3d2cd;color:var(--red);}
+  .cost-budget-diff.zero{background:#f3f5f8;border-color:#e4e8ef;color:#667085;}
+  .reduce-budget-body{grid-template-columns:minmax(0,1fr) !important;}
 </style>
 
 </head>
@@ -1182,11 +1270,13 @@
               <div class="cost-detail top">
                 <div class="cost-detail-label">Top Actual Cost</div>
                 <div class="cost-detail-text" id="costTopDetail">Tidak ada data</div>
+                <div class="cost-budget-diff" id="costTopDiff">Selisih Budget: —</div>
                 <div class="cost-detail-meta">Nilai budget act terendah &gt; 0</div>
               </div>
               <div class="cost-detail bottom">
                 <div class="cost-detail-label">Bottom Actual Cost</div>
                 <div class="cost-detail-text" id="costBottomDetail">Tidak ada data</div>
+                <div class="cost-budget-diff" id="costBottomDiff">Selisih Budget: —</div>
                 <div class="cost-detail-meta">Nilai budget act tertinggi</div>
               </div>
             </div>
@@ -1236,9 +1326,12 @@
           </div>
           <div class="reduce-budget-badge" id="reduceBudgetBadge">0 proyek</div>
         </div>
-        <div class="reduce-budget-chart-wrap" id="reduceBudgetChartWrap">
-          <div id="reduceBudgetChart"></div>
-          <div class="reduce-budget-tooltip" id="reduceBudgetTooltip"></div>
+
+        <div class="reduce-budget-body">
+          <div class="reduce-budget-chart-wrap" id="reduceBudgetChartWrap">
+            <div id="reduceBudgetChart"></div>
+            <div class="reduce-budget-tooltip" id="reduceBudgetTooltip"></div>
+          </div>
         </div>
       </section>
 
@@ -2479,6 +2572,10 @@ function renderReduceBudgetChart(data){
   host.innerHTML="";
 
   const completed=(Array.isArray(data)?data:[]).filter(p=>normalizeStageValue(p.stageNorm || p.stage)==="selesai");
+
+  // Ringkasan overbudget/top reduce sudah diwakili oleh Top/Bottom Actual Cost.
+  // Panel ini sekarang fokus pada tren bulanan Reduce Budget.
+
   const monthMap=new Map();
   let validDateCount=0;
   let validBudgetCount=0;
@@ -2691,6 +2788,20 @@ function renderScorecardBangun(data){
    Indeks chart TOP    = TOP / rata-rata Pemakaian
    Indeks chart BOTTOM = BOTTOM / rata-rata Pemakaian
 ===================================================================== */
+function setCostBudgetDifference(elementId, row){
+  const el=document.getElementById(elementId);
+  if(!el) return;
+  el.classList.remove("positive","negative","zero");
+  if(!row || !Number.isFinite(row.selisihBudget)){
+    el.textContent="Selisih Budget: —";
+    el.classList.add("zero");
+    return;
+  }
+  const v=row.selisihBudget;
+  el.textContent=`Selisih Budget: ${formatRupiah(v)}`;
+  el.classList.add(v>0 ? "positive" : (v<0 ? "negative" : "zero"));
+}
+
 function renderCostScorecard(data){
   const done = data.filter(p => p.stageNorm === "selesai");
   const validTargets = done.map(p=>p.budgetTarget).filter(v=>Number.isFinite(v));
@@ -2729,6 +2840,12 @@ function renderCostScorecard(data){
   document.getElementById("costBottomDetail").textContent = bottomRow
     ? `${bottomRow.region || "Tanpa Wilayah"} | ${bottomRow.name || "Tanpa Nama"} | ${formatRupiah(bottomRow.budgetAct)}`
     : "Tidak ada budget act pada proyek selesai";
+
+  // Selisih Budget diambil dari BARIS PROYEK YANG SAMA dengan Top/Bottom Actual Cost.
+  // Jadi Top tetap ditentukan oleh MIN budget act > 0, Bottom oleh MAX budget act,
+  // kemudian nilai header `selisih budget` pada proyek tersebut ikut ditampilkan.
+  setCostBudgetDifference("costTopDiff", topRow);
+  setCostBudgetDifference("costBottomDiff", bottomRow);
 
   const topIndex = topRow && Number.isFinite(avgAct) && avgAct !== 0
     ? (topRow.budgetAct / avgAct) * 100
