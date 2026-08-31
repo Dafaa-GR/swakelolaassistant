@@ -1078,6 +1078,88 @@
   .quality-detail-text,.time-detail-text{white-space:pre-line;}
 </style>
 
+
+<style id="project-progress-page-styles">
+  .progress-priority-panel,
+  .progress-detail-panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    box-shadow:0 8px 22px rgba(31,41,55,.04);
+  }
+  .progress-priority-panel{padding:18px 20px;margin-bottom:16px;}
+  .progress-section-head{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+    margin-bottom:14px;
+  }
+  .progress-section-head h2{margin:0 0 4px;font-size:14.5px;font-weight:800;color:var(--text);}
+  .progress-section-sub{font-size:11.5px;color:var(--text-dim);line-height:1.45;}
+  .progress-count-badge{
+    flex-shrink:0;border:1px solid var(--line);background:var(--panel-2);color:var(--text-dim);
+    border-radius:999px;padding:5px 10px;font-size:10.5px;font-weight:800;
+  }
+  .progress-count-badge.late{background:var(--red-bg);border-color:#f4cbc7;color:var(--red);}
+  .progress-count-badge.good{background:var(--green-bg);border-color:#c9ead9;color:var(--green);}
+  .progress-priority-scroll{max-height:330px;overflow:auto;padding-right:4px;}
+  .progress-priority-list{display:grid;gap:8px;}
+  .progress-priority-item{
+    display:grid;grid-template-columns:42px minmax(170px,1.45fr) minmax(120px,.85fr) minmax(130px,.9fr) minmax(105px,.7fr) minmax(105px,.75fr);
+    gap:12px;align-items:center;padding:11px 12px;border:1px solid var(--line-soft);border-radius:9px;background:#fff;
+  }
+  .progress-rank{
+    width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    background:var(--red-bg);color:var(--red);font-size:12px;font-weight:900;
+  }
+  .progress-project-main{min-width:0;}
+  .progress-project-title{font-size:12.5px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .progress-project-sub{font-size:10.5px;color:var(--text-dim);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .progress-mini-label{font-size:9.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.35px;font-weight:700;margin-bottom:3px;}
+  .progress-mini-value{font-size:11.5px;font-weight:750;color:var(--text);line-height:1.3;}
+  .progress-mini-value.bad{color:var(--red);}
+  .progress-tukang-badge{
+    display:inline-flex;align-items:center;max-width:100%;padding:3px 7px;border-radius:6px;
+    background:var(--panel-2);border:1px solid var(--line);font-size:10px;font-weight:700;color:#596579;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .progress-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+  .progress-detail-panel{overflow:hidden;}
+  .progress-detail-panel.ontrack{border-top:3px solid var(--green);}
+  .progress-detail-panel.late{border-top:3px solid var(--red);}
+  .progress-detail-head{padding:15px 16px 12px;border-bottom:1px solid var(--line-soft);display:flex;justify-content:space-between;gap:12px;align-items:flex-start;}
+  .progress-detail-head h3{margin:0 0 3px;font-size:13.5px;font-weight:800;}
+  .progress-detail-panel.ontrack h3{color:var(--green);}
+  .progress-detail-panel.late h3{color:var(--red);}
+  .progress-detail-scroll{max-height:430px;overflow:auto;padding:8px;}
+  .progress-detail-list{display:grid;gap:7px;}
+  .progress-detail-item{
+    border:1px solid var(--line-soft);border-radius:9px;padding:10px 11px;background:#fff;
+    display:grid;grid-template-columns:minmax(150px,1.35fr) minmax(100px,.8fr) minmax(125px,.9fr);gap:10px;align-items:center;
+  }
+  .progress-detail-panel.ontrack .progress-detail-item{border-left:3px solid #74c99d;}
+  .progress-detail-panel.late .progress-detail-item{border-left:3px solid #ef766c;}
+  .progress-inline-progress{display:flex;align-items:center;gap:7px;margin-top:5px;}
+  .progress-inline-track{height:6px;flex:1;background:var(--line-soft);border-radius:99px;overflow:hidden;min-width:60px;}
+  .progress-inline-fill{height:100%;border-radius:99px;background:var(--blue);}
+  .progress-detail-panel.ontrack .progress-inline-fill{background:var(--green);}
+  .progress-detail-panel.late .progress-inline-fill{background:var(--red);}
+  .progress-inline-text{font-size:10px;color:var(--text-dim);font-weight:700;white-space:nowrap;}
+  .progress-empty{padding:24px 14px;text-align:center;color:var(--text-dim);font-size:12px;}
+  .progress-page-note{font-size:10.5px;color:var(--text-dim);margin-top:-8px;margin-bottom:18px;}
+  .progress-priority-scroll::-webkit-scrollbar,.progress-detail-scroll::-webkit-scrollbar{width:8px;}
+  .progress-priority-scroll::-webkit-scrollbar-track,.progress-detail-scroll::-webkit-scrollbar-track{background:transparent;}
+  .progress-priority-scroll::-webkit-scrollbar-thumb,.progress-detail-scroll::-webkit-scrollbar-thumb{background:#cfd5df;border-radius:99px;border:2px solid #fff;}
+  @media(max-width:1050px){
+    .progress-priority-item{grid-template-columns:38px minmax(180px,1.3fr) minmax(105px,.8fr) minmax(120px,.85fr);}
+    .progress-priority-item .priority-hide-medium{display:none;}
+    .progress-detail-grid{grid-template-columns:1fr;}
+  }
+  @media(max-width:650px){
+    .progress-priority-item{grid-template-columns:34px minmax(0,1fr);}
+    .progress-priority-item .priority-hide-small{display:none;}
+    .progress-detail-item{grid-template-columns:1fr;}
+  }
+</style>
+
 </head>
 <body>
 
@@ -1098,9 +1180,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
         Project Summary
       </a>
-      <a class="sb-link" data-page="projects" data-target="tablePanel">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        Detail Proyek
+      <a class="sb-link" data-page="progress" data-target="projectProgressKpi">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M3 19h18"/><path d="M4 7l5-3 5 4 6-5"/></svg>
+        Project Progress
       </a>
       <a class="sb-link" data-page="manpower" data-target="manpowerKpi">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3.5 20c0-3.4 2.4-5.8 5.5-5.8s5.5 2.4 5.5 5.8"/><path d="M14.2 14.8c3 .1 5.3 2 5.3 5.2"/></svg>
@@ -1550,6 +1632,94 @@
 
       <div class="footer-note">Dashboard contoh dengan data ilustratif. Ganti array PROJECTS pada kode sumber dengan data aktual proyek Anda.</div>
 
+    </div>
+
+
+    <div class="wrap page page-hidden" id="pageProjectProgress">
+      <div class="filterbar">
+        <div>
+          <label>Wilayah</label>
+          <select id="fPpRegion"><option value="all">Semua Wilayah</option></select>
+        </div>
+        <div>
+          <label>Penanggung Jawab</label>
+          <select id="fPpPic"><option value="all">Semua PIC</option></select>
+        </div>
+        <button class="reset-btn" id="btnPpReset">Reset</button>
+      </div>
+
+      <div class="kpi-grid" id="projectProgressKpi">
+        <div class="kpi">
+          <div class="dial" style="--accent:#FFCC4D; --pct:0;" id="ppDialProgressWrap"><span class="dial-txt" id="ppDialProgress">0</span></div>
+          <div class="kpi-body">
+            <div class="k-label">Total Progress</div>
+            <div class="k-value" id="ppKpiProgress">0</div>
+            <div class="k-foot" id="ppKpiProgressFoot">proyek berstatus On Progress</div>
+          </div>
+        </div>
+        <div class="kpi">
+          <div class="dial" style="--accent:#7EC151; --pct:0;" id="ppDialOnTrackWrap"><span class="dial-txt" id="ppDialOnTrack">0</span></div>
+          <div class="kpi-body">
+            <div class="k-label">On Track</div>
+            <div class="k-value" id="ppKpiOnTrack">0</div>
+            <div class="k-foot" id="ppKpiOnTrackFoot">proyek tepat waktu</div>
+          </div>
+        </div>
+        <div class="kpi">
+          <div class="dial" style="--accent:#e0483a; --pct:0;" id="ppDialLateWrap"><span class="dial-txt" id="ppDialLate">0</span></div>
+          <div class="kpi-body">
+            <div class="k-label">Potential Late</div>
+            <div class="k-value" id="ppKpiLate">0</div>
+            <div class="k-foot" id="ppKpiLateFoot">proyek berisiko</div>
+          </div>
+        </div>
+      </div>
+
+      <section class="progress-priority-panel" id="projectPriorityPanel">
+        <div class="progress-section-head">
+          <div>
+            <h2>Proyek Prioritas</h2>
+            <div class="progress-section-sub">Prioritas monitoring sementara: proyek On Progress yang masuk Potential Late, diurutkan dari deadline terdekat lalu deviasi progres terbesar.</div>
+          </div>
+          <div class="progress-count-badge late" id="ppPriorityCount">0 prioritas</div>
+        </div>
+        <div class="progress-priority-scroll">
+          <div class="progress-priority-list" id="ppPriorityList"></div>
+          <div class="progress-empty" id="ppPriorityEmpty" style="display:none;">Tidak ada proyek Potential Late pada filter saat ini.</div>
+        </div>
+      </section>
+
+      <div class="progress-detail-grid">
+        <section class="progress-detail-panel ontrack">
+          <div class="progress-detail-head">
+            <div>
+              <h3>Detail Proyek On Track</h3>
+              <div class="progress-section-sub">Hanya proyek On Progress dengan penanda On Track aktif.</div>
+            </div>
+            <div class="progress-count-badge good" id="ppOnTrackCount">0 proyek</div>
+          </div>
+          <div class="progress-detail-scroll">
+            <div class="progress-detail-list" id="ppOnTrackList"></div>
+            <div class="progress-empty" id="ppOnTrackEmpty" style="display:none;">Tidak ada proyek On Track pada filter saat ini.</div>
+          </div>
+        </section>
+
+        <section class="progress-detail-panel late">
+          <div class="progress-detail-head">
+            <div>
+              <h3>Detail Proyek Potential Late</h3>
+              <div class="progress-section-sub">Hanya proyek On Progress dengan penanda Potential Late aktif.</div>
+            </div>
+            <div class="progress-count-badge late" id="ppLateCount">0 proyek</div>
+          </div>
+          <div class="progress-detail-scroll">
+            <div class="progress-detail-list" id="ppLateList"></div>
+            <div class="progress-empty" id="ppLateEmpty" style="display:none;">Tidak ada proyek Potential Late pada filter saat ini.</div>
+          </div>
+        </section>
+      </div>
+
+      <div class="progress-page-note">Catatan: On Track dan Potential Late mengikuti penanda sumber yang sama dengan Project Summary. Jika satu proyek memiliki kedua penanda aktif, proyek dapat muncul di kedua daftar.</div>
     </div>
 
     <div class="wrap page page-hidden" id="pageEmployees">
@@ -4180,6 +4350,162 @@ document.getElementById("btnEmpReset").addEventListener("click", ()=>{
   renderEmployeesDebounced();
 });
 
+
+/* =====================================================================
+   HALAMAN PROJECT PROGRESS
+   - Memakai dataset PROJECTS yang sama; tidak melakukan fetch CSV tambahan.
+   - Total Progress / On Track / Potential Late identik dengan Project Summary.
+   - Proyek Prioritas sementara = subset Potential Late, deadline terdekat dahulu,
+     lalu deviasi progres yang paling negatif.
+===================================================================== */
+function populateProjectProgressFilters(){
+  const regions=[...new Set(PROJECTS.map(p=>(p.region||"").trim()))].filter(Boolean).sort();
+  const pics=[...new Set(PROJECTS.map(p=>(p.pic||"").trim()))].filter(Boolean).sort();
+  const fr=document.getElementById("fPpRegion"), fp=document.getElementById("fPpPic");
+  if(!fr || !fp) return;
+  const cr=fr.value, cp=fp.value;
+  fr.innerHTML='<option value="all">Semua Wilayah</option>' + regions.map(r=>`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join("");
+  fp.innerHTML='<option value="all">Semua PIC</option>' + pics.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
+  if(regions.includes(cr)) fr.value=cr;
+  if(pics.includes(cp)) fp.value=cp;
+}
+function getFilteredProjectProgress(){
+  const region=document.getElementById("fPpRegion")?.value || "all";
+  const pic=document.getElementById("fPpPic")?.value || "all";
+  return PROJECTS.filter(p=>{
+    if(region!=="all" && normRegion(p.region)!==normRegion(region)) return false;
+    if(pic!=="all" && p.pic!==pic) return false;
+    return true;
+  });
+}
+function ppDeadlineTs(p){
+  if(!p || !p.deadline) return Number.POSITIVE_INFINITY;
+  const d=new Date(p.deadline);
+  return Number.isNaN(d.getTime()) ? Number.POSITIVE_INFINITY : d.getTime();
+}
+function ppDateText(p){
+  if(!p || !p.deadline) return "—";
+  const d=new Date(p.deadline);
+  if(Number.isNaN(d.getTime())) return p.deadline;
+  return d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"});
+}
+function ppProjectTitle(p){ return `${escapeHtml(p.region || "—")} | ${escapeHtml(p.name || "—")}`; }
+function ppTukang(p){ return escapeHtml((p.tukangType || "Tidak ada data").trim() || "Tidak ada data"); }
+function ppProgressPct(p){ return Math.max(0, Math.min(100, Number(p.actual)||0)); }
+function renderPpDetailItem(p){
+  const deviation=Number.isFinite(p.deviation) ? `${p.deviation>0?"+":""}${p.deviation.toFixed(1)}%` : "—";
+  return `
+    <div class="progress-detail-item">
+      <div>
+        <div class="progress-project-title" title="${ppProjectTitle(p)}">${ppProjectTitle(p)}</div>
+        <div class="progress-project-sub">PM: ${escapeHtml(p.pic || "—")}</div>
+        <div class="progress-inline-progress">
+          <div class="progress-inline-track"><div class="progress-inline-fill" style="width:${ppProgressPct(p)}%"></div></div>
+          <div class="progress-inline-text">${Number(p.actual)||0}% / ${Number(p.planned)||0}%</div>
+        </div>
+      </div>
+      <div>
+        <div class="progress-mini-label">Deviasi</div>
+        <div class="progress-mini-value ${Number(p.deviation)<0?'bad':''}">${deviation}</div>
+        <div style="margin-top:6px"><span class="progress-tukang-badge">Tukang: ${ppTukang(p)}</span></div>
+      </div>
+      <div>
+        <div class="progress-mini-label">Deadline</div>
+        <div class="progress-mini-value">${escapeHtml(ppDateText(p))}</div>
+      </div>
+    </div>`;
+}
+function renderProjectProgress(){
+  const page=document.getElementById("pageProjectProgress");
+  if(!page) return;
+  const data=getFilteredProjectProgress();
+  const onProgress=data.filter(isOnProgressProject);
+  const onTrack=onProgress.filter(p=>isActiveProjectFlag(p.ontime));
+  const late=onProgress.filter(p=>isActiveProjectFlag(p.actualProg));
+
+  const total=data.length;
+  const progressPct=total ? (onProgress.length/total)*100 : 0;
+  const onTrackPct=onProgress.length ? (onTrack.length/onProgress.length)*100 : 0;
+  const latePct=onProgress.length ? (late.length/onProgress.length)*100 : 0;
+
+  document.getElementById("ppKpiProgress").textContent=onProgress.length;
+  document.getElementById("ppDialProgress").textContent=onProgress.length;
+  document.getElementById("ppDialProgressWrap").style.setProperty("--pct",Math.max(0,Math.min(100,progressPct)));
+  document.getElementById("ppKpiProgressFoot").textContent=total ? `${Math.round(progressPct)}% dari ${total} proyek terfilter` : "tidak ada data";
+
+  document.getElementById("ppKpiOnTrack").textContent=onTrack.length;
+  document.getElementById("ppDialOnTrack").textContent=onTrack.length;
+  document.getElementById("ppDialOnTrackWrap").style.setProperty("--pct",Math.max(0,Math.min(100,onTrackPct)));
+  document.getElementById("ppKpiOnTrackFoot").textContent=onProgress.length ? `${Math.round(onTrackPct)}% dari ${onProgress.length} proyek On Progress` : "tidak ada proyek On Progress";
+
+  document.getElementById("ppKpiLate").textContent=late.length;
+  document.getElementById("ppDialLate").textContent=late.length;
+  document.getElementById("ppDialLateWrap").style.setProperty("--pct",Math.max(0,Math.min(100,latePct)));
+  document.getElementById("ppKpiLateFoot").textContent=onProgress.length ? `${Math.round(latePct)}% dari ${onProgress.length} proyek On Progress` : "tidak ada proyek On Progress";
+
+  // Prioritas = Potential Late. Deadline terdekat dahulu, lalu gap progres terburuk.
+  const priority=[...late].sort((a,b)=>{
+    const da=ppDeadlineTs(a), db=ppDeadlineTs(b);
+    if(da!==db) return da-db;
+    const va=Number.isFinite(a.deviation)?a.deviation:0;
+    const vb=Number.isFinite(b.deviation)?b.deviation:0;
+    if(va!==vb) return va-vb;
+    return (a.name||"").localeCompare(b.name||"");
+  });
+  document.getElementById("ppPriorityCount").textContent=`${priority.length} prioritas`;
+  const priorityList=document.getElementById("ppPriorityList");
+  const priorityEmpty=document.getElementById("ppPriorityEmpty");
+  priorityEmpty.style.display=priority.length?"none":"block";
+  priorityList.innerHTML=priority.map((p,i)=>{
+    const dev=Number.isFinite(p.deviation)?`${p.deviation>0?"+":""}${p.deviation.toFixed(1)}%`:"—";
+    return `<div class="progress-priority-item">
+      <div class="progress-rank">${i+1}</div>
+      <div class="progress-project-main">
+        <div class="progress-project-title" title="${ppProjectTitle(p)}">${ppProjectTitle(p)}</div>
+        <div class="progress-project-sub">PM: ${escapeHtml(p.pic||"—")}</div>
+      </div>
+      <div>
+        <div class="progress-mini-label">Progress</div>
+        <div class="progress-mini-value">${Number(p.actual)||0}% / ${Number(p.planned)||0}%</div>
+      </div>
+      <div class="priority-hide-small">
+        <div class="progress-mini-label">Deviasi</div>
+        <div class="progress-mini-value bad">${dev}</div>
+      </div>
+      <div class="priority-hide-medium priority-hide-small">
+        <div class="progress-mini-label">Deadline</div>
+        <div class="progress-mini-value">${escapeHtml(ppDateText(p))}</div>
+      </div>
+      <div class="priority-hide-medium priority-hide-small">
+        <div class="progress-mini-label">Tukang</div>
+        <span class="progress-tukang-badge">${ppTukang(p)}</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  const onTrackSorted=[...onTrack].sort((a,b)=>ppDeadlineTs(a)-ppDeadlineTs(b));
+  const lateSorted=[...late].sort((a,b)=>ppDeadlineTs(a)-ppDeadlineTs(b));
+  document.getElementById("ppOnTrackCount").textContent=`${onTrackSorted.length} proyek`;
+  document.getElementById("ppLateCount").textContent=`${lateSorted.length} proyek`;
+  document.getElementById("ppOnTrackEmpty").style.display=onTrackSorted.length?"none":"block";
+  document.getElementById("ppLateEmpty").style.display=lateSorted.length?"none":"block";
+  document.getElementById("ppOnTrackList").innerHTML=onTrackSorted.map(renderPpDetailItem).join("");
+  document.getElementById("ppLateList").innerHTML=lateSorted.map(renderPpDetailItem).join("");
+}
+const renderProjectProgressDebounced=debounce(()=>{
+  if(currentPage === "progress") renderProjectProgress();
+},120);
+["fPpRegion","fPpPic"].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener("change",renderProjectProgressDebounced);
+});
+const ppReset=document.getElementById("btnPpReset");
+if(ppReset) ppReset.addEventListener("click",()=>{
+  document.getElementById("fPpRegion").value="all";
+  document.getElementById("fPpPic").value="all";
+  renderProjectProgress();
+});
+
 /* ===== Sidebar & page-switching behaviour ===== */
 const sidebar = document.getElementById("sidebar");
 const sbBackdrop = document.getElementById("sbBackdrop");
@@ -4191,6 +4517,7 @@ sbBackdrop.addEventListener("click", closeSidebar);
 
 const pageMeta = {
   projects: {title:"Dashboard Proyek Bangunan", sub:"Panel pemantauan progres, deviasi & risiko keterlambatan"},
+  progress: {title:"Dashboard Project Progress", sub:"Panel fokus proyek On Progress, prioritas monitoring & risiko keterlambatan"},
   manpower: {title:"Dashboard Manpower", sub:"Panel pemantauan jumlah tenaga kerja & produktivitas manpower"},
   employees: {title:"Dashboard Performa Karyawan", sub:"Panel pemantauan skor kinerja, deviasi & risiko pembinaan"},
 };
@@ -4201,6 +4528,7 @@ async function switchPage(page){
   const changed = page !== currentPage;
   if(changed){
     document.getElementById("pageProjects").classList.toggle("page-hidden", page!=="projects");
+    document.getElementById("pageProjectProgress").classList.toggle("page-hidden", page!=="progress");
     document.getElementById("pageManpower").classList.toggle("page-hidden", page!=="manpower");
     document.getElementById("pageEmployees").classList.toggle("page-hidden", page!=="employees");
     document.getElementById("pageTitle").textContent = pageMeta[page].title;
@@ -4213,6 +4541,11 @@ async function switchPage(page){
     await Promise.all([ensureProjectData(false), ensureStatusBankData(false)]);
     if(changed) populateFilters();
     render();
+  }else if(page === "progress"){
+    await ensureProjectData(false);
+    if(changed) populateProjectProgressFilters();
+    renderProjectProgress();
+    setSyncInfo("Data project progress siap · " + new Date().toLocaleTimeString("id-ID"));
   }else if(page === "manpower"){
     setSyncInfo(PERF_STATE.manpowerLoaded ? "Data manpower siap" : "Memuat data manpower...");
 
@@ -4267,6 +4600,12 @@ document.getElementById("btnSync").addEventListener("click", async ()=>{
     if(currentPage === "employees"){
       await bootEmployees(true);
       setSyncInfo("Data karyawan disinkronkan · " + new Date().toLocaleTimeString("id-ID"));
+    }else if(currentPage === "progress"){
+      await ensureProjectData(true);
+      populateProjectProgressFilters();
+      renderProjectProgress();
+      populateFilters();
+      setSyncInfo("Data project progress disinkronkan · " + new Date().toLocaleTimeString("id-ID"));
     }else if(currentPage === "manpower"){
       const results=await Promise.allSettled([ensureProjectData(true), ensureManpowerEmployeeData(true)]);
       if(results[0].status==="rejected") console.warn("Refresh project CSV manpower gagal",results[0].reason);
@@ -4299,6 +4638,10 @@ setInterval(()=>{
         await Promise.all([ensureProjectData(true), ensureStatusBankData(true)]);
         populateFilters();
         render();
+      }else if(currentPage === "progress"){
+        await ensureProjectData(true);
+        populateProjectProgressFilters();
+        renderProjectProgress();
       }else if(currentPage === "manpower"){
         await Promise.allSettled([ensureProjectData(true), ensureManpowerEmployeeData(true)]);
         populateManpowerFilters();
