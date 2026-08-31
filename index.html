@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Swakelola — Monitor Center</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
   :root{
@@ -1843,6 +1842,106 @@ let sortKey = "region";
 let sortDir = 1;
 let charts = {};
 
+/* =====================================================================
+   PERFORMANCE CORE
+   - Dataset dimuat satu kali dan dipakai ulang antar-scorecard.
+   - Halaman Manpower / Employee diload saat pertama kali dibuka (lazy load).
+   - Request yang sedang berjalan dideduplikasi agar CSV yang sama tidak di-fetch
+     berkali-kali pada saat bersamaan.
+   - Chart.js hanya dimuat ketika halaman Employee benar-benar dibuka.
+===================================================================== */
+const PERF_STATE = {
+  projectLoaded:false,
+  statusBankLoaded:false,
+  manpowerLoaded:false,
+  employeesLoaded:false,
+  projectPromise:null,
+  statusBankPromise:null,
+  manpowerPromise:null,
+  employeesPromise:null,
+  chartPromise:null,
+  projectAt:0,
+  statusBankAt:0,
+  manpowerAt:0,
+  employeesAt:0,
+};
+const DATA_CACHE_TTL_MS = 5 * 60 * 1000;
+function cacheFresh(ts){ return ts && (Date.now()-ts) < DATA_CACHE_TTL_MS; }
+const CHART_JS_URL = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js";
+
+function debounce(fn, wait=120){
+  let timer=null;
+  return function(...args){
+    clearTimeout(timer);
+    timer=setTimeout(()=>fn.apply(this,args),wait);
+  };
+}
+
+function runWhenIdle(fn){
+  if("requestIdleCallback" in window){
+    window.requestIdleCallback(()=>fn(),{timeout:2500});
+  }else{
+    setTimeout(fn,180);
+  }
+}
+
+function ensureChartJs(){
+  if(window.Chart) return Promise.resolve(window.Chart);
+  if(PERF_STATE.chartPromise) return PERF_STATE.chartPromise;
+  PERF_STATE.chartPromise = new Promise((resolve,reject)=>{
+    const existing=document.querySelector('script[data-lazy-chartjs="1"]');
+    if(existing){
+      existing.addEventListener("load",()=>resolve(window.Chart),{once:true});
+      existing.addEventListener("error",reject,{once:true});
+      return;
+    }
+    const script=document.createElement("script");
+    script.src=CHART_JS_URL;
+    script.async=true;
+    script.dataset.lazyChartjs="1";
+    script.onload=()=>resolve(window.Chart);
+    script.onerror=()=>reject(new Error("Chart.js gagal dimuat"));
+    document.head.appendChild(script);
+  }).finally(()=>{ if(!window.Chart) PERF_STATE.chartPromise=null; });
+  return PERF_STATE.chartPromise;
+}
+
+async function ensureProjectData(force=false){
+  if(PERF_STATE.projectLoaded && !force && cacheFresh(PERF_STATE.projectAt)) return PROJECTS;
+  if(PERF_STATE.projectPromise) return PERF_STATE.projectPromise;
+  PERF_STATE.projectPromise=(async()=>{
+    PROJECTS=deriveFields(await loadData());
+    PERF_STATE.projectLoaded=true;
+    PERF_STATE.projectAt=Date.now();
+    return PROJECTS;
+  })().finally(()=>{ PERF_STATE.projectPromise=null; });
+  return PERF_STATE.projectPromise;
+}
+
+async function ensureStatusBankData(force=false){
+  if(PERF_STATE.statusBankLoaded && !force && cacheFresh(PERF_STATE.statusBankAt)) return STATUS_BANK;
+  if(PERF_STATE.statusBankPromise) return PERF_STATE.statusBankPromise;
+  PERF_STATE.statusBankPromise=(async()=>{
+    STATUS_BANK=await loadStatusBank();
+    PERF_STATE.statusBankLoaded=true;
+    PERF_STATE.statusBankAt=Date.now();
+    return STATUS_BANK;
+  })().finally(()=>{ PERF_STATE.statusBankPromise=null; });
+  return PERF_STATE.statusBankPromise;
+}
+
+async function ensureManpowerEmployeeData(force=false){
+  if(PERF_STATE.manpowerLoaded && !force && cacheFresh(PERF_STATE.manpowerAt)) return MANPOWER_EMPLOYEES;
+  if(PERF_STATE.manpowerPromise) return PERF_STATE.manpowerPromise;
+  PERF_STATE.manpowerPromise=(async()=>{
+    MANPOWER_EMPLOYEES=await loadManpowerEmployeeData();
+    PERF_STATE.manpowerLoaded=true;
+    PERF_STATE.manpowerAt=Date.now();
+    return MANPOWER_EMPLOYEES;
+  })().finally(()=>{ PERF_STATE.manpowerPromise=null; });
+  return PERF_STATE.manpowerPromise;
+}
+
 // Nilai yang dianggap TIDAK AKTIF pada kolom penanda "actual prog." & "ontime".
 // Selain sel kosong, formula Google Sheets kadang menghasilkan 0 / FALSE / N/A.
 // Nilai-nilai tersebut tidak boleh ikut terhitung sebagai On Track / Potential Late.
@@ -2166,9 +2265,13 @@ function deriveFields(list){
     p.actTime = parseDurationNumber(p.actTime);
     // Tanggal SPK Awal untuk mini chart bulanan pada Project Summary.
     p.spkAwal = (p.spkAwal || "").toString().trim();
+    // Parse tanggal sekali saat data masuk supaya pergantian filter tidak perlu
+    // melakukan parsing tanggal berulang kali.
+    p.spkAwalDate = parseSpkDate(p.spkAwal);
     // Tanggal SPK Akhir + selisih budget untuk chart Reduce Budget.
     // Format tanggal mengikuti sumber proyek (M/D/YYYY, sama seperti SPK Awal).
     p.spkAkhir = (p.spkAkhir || "").toString().trim();
+    p.spkAkhirDate = parseSpkAkhirDate(p.spkAkhir);
     p.selisihBudget = p.selisihBudget === null || p.selisihBudget === undefined ? null : parseSignedBudgetDifference(p.selisihBudget);
     // Data halaman Manpower.
     p.tukangType = (p.tukangType || "").toString().trim();
@@ -2318,13 +2421,10 @@ function populateFilters(){
 }
 
 async function boot(){
-  PROJECTS = deriveFields(await loadData());
-  STATUS_BANK = await loadStatusBank();
-  MANPOWER_EMPLOYEES = await loadManpowerEmployeeData();
+  setSyncInfo("Memuat data proyek...");
+  await Promise.all([ensureProjectData(false), ensureStatusBankData(false)]);
   populateFilters();
-  populateManpowerFilters();
   render();
-  renderManpower();
 }
 
 function getFiltered(){
@@ -2433,7 +2533,7 @@ function renderSpkMonthlyChart(data){
   const monthMap = new Map();
   let validCount = 0;
   data.forEach(p=>{
-    const d = parseSpkDate(p.spkAwal);
+    const d = p.spkAwalDate || parseSpkDate(p.spkAwal);
     if(!d) return;
     validCount++;
     const y = d.getUTCFullYear ? d.getUTCFullYear() : d.getFullYear();
@@ -2582,7 +2682,7 @@ function renderReduceBudgetChart(data){
   let validPairCount=0;
 
   completed.forEach(p=>{
-    const d=parseSpkAkhirDate(p.spkAkhir);
+    const d=p.spkAkhirDate || parseSpkAkhirDate(p.spkAkhir);
     const value=Number.isFinite(p.selisihBudget) ? p.selisihBudget : parseSignedBudgetDifference(p.selisihBudget);
     if(d) validDateCount++;
     if(Number.isFinite(value)) validBudgetCount++;
@@ -3263,25 +3363,25 @@ function render(){
   });
 
   const tbody = document.getElementById("tableBody");
-  tbody.innerHTML = "";
   document.getElementById("tableCount").textContent = sorted.length;
   document.getElementById("emptyState").style.display = sorted.length ? "none":"block";
 
-  sorted.forEach(p=>{
-    const tr = document.createElement("tr");
+  // Satu kali penulisan DOM jauh lebih ringan daripada append <tr> satu per satu,
+  // khususnya ketika jumlah proyek selesai sudah ratusan baris.
+  tbody.innerHTML = sorted.map(p=>{
     const timeText = Number.isFinite(p.actTime) ? formatDays(p.actTime, true) : "—";
     const budgetText = Number.isFinite(p.budgetAct) ? formatRupiah(p.budgetAct) : "—";
     const afsText = Number.isFinite(p.afs) ? formatAfs(p.afs, true) : "—";
-    tr.innerHTML = `
-      <td>${p.region || "—"}</td>
-      <td><div class="proj-name">${p.name || "—"}</div></td>
-      <td>${p.pic || "—"}</td>
-      <td>${timeText}</td>
-      <td><strong>${budgetText}</strong></td>
-      <td>${afsText}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+    return `
+      <tr>
+        <td>${p.region || "—"}</td>
+        <td><div class="proj-name">${p.name || "—"}</div></td>
+        <td>${p.pic || "—"}</td>
+        <td>${timeText}</td>
+        <td><strong>${budgetText}</strong></td>
+        <td>${afsText}</td>
+      </tr>`;
+  }).join("");
 
 }
 
@@ -3364,14 +3464,16 @@ document.querySelectorAll("th[data-key]").forEach(th=>{
   });
 });
 
+const renderProjectsDebounced = debounce(()=>{
+  if(currentPage === "projects") render();
+}, 90);
 ["fRegion","fPic"].forEach(id=>{
-  document.getElementById(id).addEventListener("input", render);
-  document.getElementById(id).addEventListener("change", render);
+  document.getElementById(id).addEventListener("change", renderProjectsDebounced);
 });
 document.getElementById("btnReset").addEventListener("click", ()=>{
   document.getElementById("fRegion").value="all";
   document.getElementById("fPic").value="all";
-  render();
+  renderProjectsDebounced();
 });
 
 /* =====================================================================
@@ -3435,17 +3537,15 @@ function renderActiveWorkerList(){
   const empty=document.getElementById("mpActiveWorkerEmpty");
   if(!body || !count || !empty) return;
   count.textContent=`${MANPOWER_EMPLOYEES.length.toLocaleString("id-ID")} orang`;
-  body.innerHTML="";
   if(!MANPOWER_EMPLOYEES.length){
+    body.innerHTML="";
     empty.style.display="block";
     return;
   }
   empty.style.display="none";
-  MANPOWER_EMPLOYEES.forEach((worker,index)=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${index+1}</td><td><div class="manpower-list-name">${escapeHtml(worker.name)}</div></td>`;
-    body.appendChild(tr);
-  });
+  body.innerHTML=MANPOWER_EMPLOYEES.map((worker,index)=>
+    `<tr><td>${index+1}</td><td><div class="manpower-list-name">${escapeHtml(worker.name)}</div></td></tr>`
+  ).join("");
 }
 
 const MANPOWER_PRODUCTIVITY_TARGET = 2.50;
@@ -3655,15 +3755,18 @@ function renderManpower(){
   }
 }
 
+const renderManpowerDebounced = debounce(()=>{
+  if(currentPage === "manpower") renderManpower();
+}, 90);
 ["fMpRegion","fMpPic"].forEach(id=>{
   const el=document.getElementById(id);
-  if(el){el.addEventListener("input",renderManpower);el.addEventListener("change",renderManpower);}
+  if(el) el.addEventListener("change",renderManpowerDebounced);
 });
 const btnMpReset=document.getElementById("btnMpReset");
 if(btnMpReset) btnMpReset.addEventListener("click",()=>{
   document.getElementById("fMpRegion").value="all";
   document.getElementById("fMpPic").value="all";
-  renderManpower();
+  renderManpowerDebounced();
 });
 
 /* =====================================================================
@@ -3897,8 +4000,20 @@ function renderEmployeeTrendChart(){
   });
 }
 
-async function bootEmployees(){
-  EMPLOYEES = deriveEmployeeFields(await loadEmployeeData());
+async function ensureEmployeeData(force=false){
+  if(PERF_STATE.employeesLoaded && !force && cacheFresh(PERF_STATE.employeesAt)) return EMPLOYEES;
+  if(PERF_STATE.employeesPromise) return PERF_STATE.employeesPromise;
+  PERF_STATE.employeesPromise=(async()=>{
+    EMPLOYEES=deriveEmployeeFields(await loadEmployeeData());
+    PERF_STATE.employeesLoaded=true;
+    PERF_STATE.employeesAt=Date.now();
+    return EMPLOYEES;
+  })().finally(()=>{ PERF_STATE.employeesPromise=null; });
+  return PERF_STATE.employeesPromise;
+}
+
+async function bootEmployees(force=false){
+  await Promise.all([ensureEmployeeData(force), ensureChartJs()]);
   populateEmployeeFilters();
   renderEmployeeTrendChart();
   renderEmployees();
@@ -3912,16 +4027,19 @@ document.querySelectorAll("th[data-ekey]").forEach(th=>{
   });
 });
 
-["fEmpStatus","fEmpDept","fEmpManager","fEmpSearch"].forEach(id=>{
-  document.getElementById(id).addEventListener("input", renderEmployees);
-  document.getElementById(id).addEventListener("change", renderEmployees);
+const renderEmployeesDebounced = debounce(()=>{
+  if(currentPage === "employees" && PERF_STATE.employeesLoaded) renderEmployees();
+}, 120);
+["fEmpStatus","fEmpDept","fEmpManager"].forEach(id=>{
+  document.getElementById(id).addEventListener("change", renderEmployeesDebounced);
 });
+document.getElementById("fEmpSearch").addEventListener("input", renderEmployeesDebounced);
 document.getElementById("btnEmpReset").addEventListener("click", ()=>{
   document.getElementById("fEmpStatus").value="all";
   document.getElementById("fEmpDept").value="all";
   document.getElementById("fEmpManager").value="all";
   document.getElementById("fEmpSearch").value="";
-  renderEmployees();
+  renderEmployeesDebounced();
 });
 
 /* ===== Sidebar & page-switching behaviour ===== */
@@ -3940,67 +4058,105 @@ const pageMeta = {
 };
 let currentPage = "projects";
 
-function switchPage(page){
-  if(page !== currentPage){
+async function switchPage(page){
+  if(!pageMeta[page]) return;
+  const changed = page !== currentPage;
+  if(changed){
     document.getElementById("pageProjects").classList.toggle("page-hidden", page!=="projects");
     document.getElementById("pageManpower").classList.toggle("page-hidden", page!=="manpower");
     document.getElementById("pageEmployees").classList.toggle("page-hidden", page!=="employees");
     document.getElementById("pageTitle").textContent = pageMeta[page].title;
     document.getElementById("pageSub").textContent = pageMeta[page].sub;
     currentPage = page;
-    if(page==="manpower"){
-      // Render ulang setelah halaman terlihat agar SVG mengambil ruang panel secara stabil.
-      setTimeout(()=>{ try{ renderManpower(); }catch(e){ console.warn("Gagal refresh halaman manpower.",e); } },30);
+  }
+
+  // Hanya memuat/menghitung dataset milik halaman yang benar-benar sedang dibuka.
+  if(page === "projects"){
+    await Promise.all([ensureProjectData(false), ensureStatusBankData(false)]);
+    if(changed) populateFilters();
+    render();
+  }else if(page === "manpower"){
+    setSyncInfo(PERF_STATE.manpowerLoaded ? "Data manpower siap" : "Memuat data manpower...");
+    await Promise.all([ensureProjectData(false), ensureManpowerEmployeeData(false)]);
+    populateManpowerFilters();
+    // Tunggu satu frame setelah halaman terlihat supaya SVG memperoleh ukuran final.
+    await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
+    renderManpower();
+    setSyncInfo("Data manpower siap · " + new Date().toLocaleTimeString("id-ID"));
+  }else if(page === "employees"){
+    setSyncInfo(PERF_STATE.employeesLoaded ? "Data karyawan siap" : "Memuat data karyawan...");
+    try{
+      await bootEmployees(false);
+      setSyncInfo("Data karyawan siap · " + new Date().toLocaleTimeString("id-ID"));
+    }catch(e){
+      console.warn("Gagal menyiapkan halaman karyawan.",e);
+      setSyncInfo("Data karyawan gagal dimuat");
     }
   }
 }
 
 document.querySelectorAll(".sb-link").forEach(link=>{
-  link.addEventListener("click", ()=>{
+  link.addEventListener("click", async ()=>{
     document.querySelectorAll(".sb-link").forEach(l=>l.classList.remove("active"));
     link.classList.add("active");
-    switchPage(link.dataset.page);
+    closeSidebar();
+    await switchPage(link.dataset.page);
     const target = document.getElementById(link.dataset.target);
     if(target){ target.scrollIntoView({behavior:"smooth", block:"start"}); }
-    closeSidebar();
   });
 });
 
 document.getElementById("btnSync").addEventListener("click", async ()=>{
   setSyncInfo("Menyinkronkan...");
-  if(currentPage==="employees"){
-    EMPLOYEES = deriveEmployeeFields(await loadEmployeeData());
-    populateEmployeeFilters();
-    renderEmployees();
-    setSyncInfo("Data karyawan disinkronkan · " + new Date().toLocaleTimeString("id-ID"));
-  } else {
-    PROJECTS = deriveFields(await loadData());
-    STATUS_BANK = await loadStatusBank();
-    MANPOWER_EMPLOYEES = await loadManpowerEmployeeData();
-    populateFilters();
-    populateManpowerFilters();
-    render();
-    renderManpower();
-    setSyncInfo((currentPage==="manpower" ? "Data manpower" : "Data proyek") + " disinkronkan · " + new Date().toLocaleTimeString("id-ID"));
+  try{
+    if(currentPage === "employees"){
+      await bootEmployees(true);
+      setSyncInfo("Data karyawan disinkronkan · " + new Date().toLocaleTimeString("id-ID"));
+    }else if(currentPage === "manpower"){
+      await Promise.all([ensureProjectData(true), ensureManpowerEmployeeData(true)]);
+      populateManpowerFilters();
+      renderManpower();
+      // Project filters diperbarui tanpa merender Project Summary yang sedang tersembunyi.
+      populateFilters();
+      setSyncInfo("Data manpower disinkronkan · " + new Date().toLocaleTimeString("id-ID"));
+    }else{
+      await Promise.all([ensureProjectData(true), ensureStatusBankData(true)]);
+      populateFilters();
+      render();
+      setSyncInfo("Data proyek disinkronkan · " + new Date().toLocaleTimeString("id-ID"));
+    }
+  }catch(e){
+    console.warn("Sinkronisasi gagal.",e);
+    setSyncInfo("Sinkronisasi gagal");
   }
 });
 
-// Auto-refresh data dari spreadsheet setiap 5 menit (opsional, hapus jika tidak perlu)
-setInterval(async ()=>{
-  PROJECTS = deriveFields(await loadData());
-  STATUS_BANK = await loadStatusBank();
-  MANPOWER_EMPLOYEES = await loadManpowerEmployeeData();
-  populateFilters();
-  populateManpowerFilters();
-  render();
-  renderManpower();
-  EMPLOYEES = deriveEmployeeFields(await loadEmployeeData());
-  populateEmployeeFilters();
-  renderEmployees();
-}, 5 * 60 * 1000);
+// Auto-refresh tetap tersedia, tetapi hanya untuk halaman yang sedang aktif.
+// Saat tab browser tidak terlihat, refresh dilewati agar tidak membebani CPU/network.
+const AUTO_REFRESH_MS = 5 * 60 * 1000;
+setInterval(()=>{
+  if(document.hidden) return;
+  runWhenIdle(async ()=>{
+    try{
+      if(currentPage === "projects"){
+        await Promise.all([ensureProjectData(true), ensureStatusBankData(true)]);
+        populateFilters();
+        render();
+      }else if(currentPage === "manpower"){
+        await Promise.all([ensureProjectData(true), ensureManpowerEmployeeData(true)]);
+        populateManpowerFilters();
+        renderManpower();
+      }else if(currentPage === "employees"){
+        await bootEmployees(true);
+      }
+    }catch(e){
+      console.warn("Auto-refresh dilewati karena terjadi kendala.",e);
+    }
+  });
+}, AUTO_REFRESH_MS);
 
+// Initial boot hanya memuat halaman Project Summary. Halaman lain lazy-load saat dibuka.
 boot();
-bootEmployees();
 </script>
 </body>
 </html>
