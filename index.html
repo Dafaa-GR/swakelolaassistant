@@ -2510,6 +2510,16 @@ function deriveFields(list){
     // Nilai seperti "Tidak Ada" dianggap SAMA DENGAN KOSONG (lihat normalizeFlag/EMPTY_FLAG_VALUES) -> TIDAK dihitung.
     p.ontime = normalizeFlag(p.ontime);
 
+    // Nilai progress untuk DETAIL halaman Project Progress.
+    // - Potential Late: Actual = header "actual prog.", Target = header "target".
+    // - On Track: Actual = header "ontime" (tanpa Target pada tampilan detail).
+    // Raw text tetap disimpan agar nilai non-numerik tidak hilang dan logika COUNTIF lama tetap aman.
+    p.actualProgRaw = (p.actualProgRaw ?? p.actualProg ?? "").toString().trim();
+    p.ontimeRaw = (p.ontimeRaw ?? p.ontime ?? "").toString().trim();
+    p.actualProgValue = parseNullableNumber(p.actualProgRaw);
+    p.ontimeValue = parseNullableNumber(p.ontimeRaw);
+    p.targetProgress = parseNullableNumber(p.targetProgress);
+
     // Kolom biaya untuk scorecard Average Cost.
     // null = kosong/tidak terbaca; angka 0 tetap dipertahankan sebagai nilai valid.
     p.budgetTarget = p.budgetTarget === null || p.budgetTarget === undefined ? null : parseMoney(p.budgetTarget);
@@ -2564,10 +2574,15 @@ async function loadData(){
       pic: rowValue(row,["pic","penanggung jawab","penanggungjawab"]).toString().trim(),
       planned: parseSheetNumber(rowValue(row,["planned","target %","target","plan"])),
       actual: parseSheetNumber(rowValue(row,["actual","realisasi %","realisasi","actual progress %"])),
+      // Sumber progress khusus halaman Project Progress.
+      // "target" dibuat field sendiri agar tidak tertimpa bila sheet juga memiliki kolom planned.
+      targetProgress: rowValue(row,["target","target progress","target %","planned","plan"], null),
       deadline: rowValue(row,["deadline","due date","duedate"]).toString().trim(),
       stage: rowValue(row,["stage","status","status proyek","project status"]).toString().trim(),
       statusBank: rowValue(row,["status_bank","status bank","statusbank"]).toString().trim(),
+      actualProgRaw: rowValue(row,["actual prog.","actual prog","actualprog","actual progress","potential late","potentiallate"]).toString().trim(),
       actualProg: rowValue(row,["actual prog.","actual prog","actualprog","actual progress","potential late","potentiallate"]).toString().trim(),
+      ontimeRaw: rowValue(row,["ontime","on time","on_time","on track","ontrack"]).toString().trim(),
       ontime: rowValue(row,["ontime","on time","on_time","on track","ontrack"]).toString().trim(),
       budgetTarget: parseMoney(rowValue(row,[
         "budget target","budget_target","budgettarget","RAB"
@@ -4366,6 +4381,8 @@ document.getElementById("btnEmpReset").addEventListener("click", ()=>{
    - Proyek Prioritas sementara = subset Potential Late, deadline terdekat dahulu,
      lalu deviasi progres yang paling negatif.
    - Detail On Track & Potential Late menampilkan Produktivitas dari header "avg prod".
+   - Potential Late/Prioritas: Actual Progress = "actual prog.", Target Progress = "target".
+   - On Track: Actual Progress = "ontime" (tanpa target pada tampilan detail).
 ===================================================================== */
 function populateProjectProgressFilters(){
   const regions=[...new Set(PROJECTS.map(p=>(p.region||"").trim()))].filter(Boolean).sort();
@@ -4400,22 +4417,52 @@ function ppDateText(p){
 }
 function ppProjectTitle(p){ return `${escapeHtml(p.region || "—")} | ${escapeHtml(p.name || "—")}`; }
 function ppTukang(p){ return escapeHtml((p.tukangType || "Tidak ada data").trim() || "Tidak ada data"); }
-function ppProgressPct(p){ return Math.max(0, Math.min(100, Number(p.actual)||0)); }
+function ppClampProgress(value){
+  const v=Number(value);
+  return Number.isFinite(v) ? Math.max(0,Math.min(100,v)) : 0;
+}
+function ppProgressText(value, raw=""){
+  const v=Number(value);
+  if(Number.isFinite(v)) return `${v.toLocaleString("id-ID",{maximumFractionDigits:2})}%`;
+  const txt=(raw ?? "").toString().trim();
+  return txt ? escapeHtml(txt) : "—";
+}
 function ppAvgProdText(p){
   const v = Number(p && p.avgProd);
   if(!Number.isFinite(v)) return "—";
   return `${v.toLocaleString("id-ID",{minimumFractionDigits:2,maximumFractionDigits:2})}%`;
 }
-function renderPpDetailItem(p){
+function ppProgressDisplay(p, mode){
+  if(mode === "ontrack"){
+    // Sesuai sumber: On Track hanya menampilkan Actual Progress dari header "ontime".
+    return {
+      actual:p.ontimeValue,
+      bar:ppClampProgress(p.ontimeValue),
+      label:"Actual On Track",
+      text:ppProgressText(p.ontimeValue,p.ontimeRaw)
+    };
+  }
+  // Potential Late / Priority: Actual dari "actual prog.", Target dari "target".
+  const actualText=ppProgressText(p.actualProgValue,p.actualProgRaw);
+  const targetText=ppProgressText(p.targetProgress,"");
+  return {
+    actual:p.actualProgValue,
+    bar:ppClampProgress(p.actualProgValue),
+    label:"Actual / Target",
+    text:`${actualText} / ${targetText}`
+  };
+}
+function renderPpDetailItem(p, mode="late"){
   const deviation=Number.isFinite(p.deviation) ? `${p.deviation>0?"+":""}${p.deviation.toFixed(1)}%` : "—";
+  const progress=ppProgressDisplay(p,mode);
   return `
     <div class="progress-detail-item">
       <div>
         <div class="progress-project-title" title="${ppProjectTitle(p)}">${ppProjectTitle(p)}</div>
         <div class="progress-project-sub">PM: ${escapeHtml(p.pic || "—")}</div>
-        <div class="progress-inline-progress">
-          <div class="progress-inline-track"><div class="progress-inline-fill" style="width:${ppProgressPct(p)}%"></div></div>
-          <div class="progress-inline-text">${Number(p.actual)||0}% / ${Number(p.planned)||0}%</div>
+        <div class="progress-inline-progress" title="${progress.label}: ${progress.text.replace(/<[^>]*>/g,'')}">
+          <div class="progress-inline-track"><div class="progress-inline-fill" style="width:${progress.bar}%"></div></div>
+          <div class="progress-inline-text">${progress.text}</div>
         </div>
       </div>
       <div>
@@ -4484,8 +4531,8 @@ function renderProjectProgress(){
         <div class="progress-project-sub">PM: ${escapeHtml(p.pic||"—")}</div>
       </div>
       <div>
-        <div class="progress-mini-label">Progress</div>
-        <div class="progress-mini-value">${Number(p.actual)||0}% / ${Number(p.planned)||0}%</div>
+        <div class="progress-mini-label">Actual / Target</div>
+        <div class="progress-mini-value">${ppProgressDisplay(p,"late").text}</div>
       </div>
       <div class="priority-hide-small">
         <div class="progress-mini-label">Deviasi</div>
@@ -4508,8 +4555,8 @@ function renderProjectProgress(){
   document.getElementById("ppLateCount").textContent=`${lateSorted.length} proyek`;
   document.getElementById("ppOnTrackEmpty").style.display=onTrackSorted.length?"none":"block";
   document.getElementById("ppLateEmpty").style.display=lateSorted.length?"none":"block";
-  document.getElementById("ppOnTrackList").innerHTML=onTrackSorted.map(renderPpDetailItem).join("");
-  document.getElementById("ppLateList").innerHTML=lateSorted.map(renderPpDetailItem).join("");
+  document.getElementById("ppOnTrackList").innerHTML=onTrackSorted.map(p=>renderPpDetailItem(p,"ontrack")).join("");
+  document.getElementById("ppLateList").innerHTML=lateSorted.map(p=>renderPpDetailItem(p,"late")).join("");
 }
 const renderProjectProgressDebounced=debounce(()=>{
   if(currentPage === "progress") renderProjectProgress();
