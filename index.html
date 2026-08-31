@@ -681,6 +681,153 @@
   @media(max-width:900px){.manpower-grid{grid-template-columns:1fr;}.manpower-type-metrics{grid-template-columns:1fr 1fr 1fr;}}
   @media(max-width:620px){.manpower-type-metrics{grid-template-columns:1fr;}.mp-type-metric+.mp-type-metric{border-left:0;border-top:1px solid var(--line);}.productivity-weeks{grid-template-columns:1fr 1fr;}}
 
+
+
+  /* ===== Total Bangun + Mini Trend SPK Awal ===== */
+  .scorecard-bangun{
+    display:grid;
+    grid-template-columns:minmax(0,1.45fr) 1px minmax(320px,.9fr);
+    align-items:stretch;
+    gap:24px;
+    min-height:290px;
+    padding:22px 24px;
+  }
+  .sb-summary-content{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:22px;
+  }
+  .sb-summary-top{
+    display:grid;
+    grid-template-columns:minmax(250px,1.15fr) minmax(210px,.85fr);
+    gap:24px;
+    align-items:center;
+  }
+  .sb-summary-bottom{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+    padding-top:18px;
+    border-top:1px solid var(--line-soft);
+  }
+  .sb-summary-bottom .sb-right-row{
+    min-width:0;
+    padding:14px 16px;
+    border:1px solid var(--line-soft);
+    border-radius:10px;
+    background:var(--panel-2);
+  }
+  .sb-summary-bottom .sb-right-nums{gap:10px;}
+  .sb-summary-bottom .sb-right-num{font-size:24px;color:var(--text);}
+  .sb-summary-bottom .sb-right-pct b{font-size:23px;color:var(--text);}
+  .scorecard-bangun > .sb-divider-v{height:auto;align-self:stretch;}
+
+  .sb-spk-trend{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    border:1px solid var(--line-soft);
+    border-radius:12px;
+    background:linear-gradient(180deg,#ffffff 0%,#fafbff 100%);
+    padding:15px 16px 12px;
+    position:relative;
+    overflow:hidden;
+  }
+  .sb-spk-trend-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:2px;
+  }
+  .sb-spk-trend-title{
+    font-size:12px;
+    font-weight:800;
+    color:var(--text);
+    letter-spacing:.2px;
+    text-transform:uppercase;
+  }
+  .sb-spk-trend-sub{
+    font-size:10.5px;
+    color:var(--text-dim);
+    margin-top:3px;
+  }
+  .sb-spk-trend-badge{
+    flex-shrink:0;
+    font-size:10px;
+    font-weight:700;
+    color:#5e48d8;
+    background:#f0edff;
+    border:1px solid #e1dcff;
+    padding:5px 8px;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+  .sb-spk-chart-wrap{
+    position:relative;
+    flex:1;
+    min-height:205px;
+    margin-top:6px;
+  }
+  #sbSpkMonthlyChart{
+    width:100%;
+    height:100%;
+    min-height:205px;
+  }
+  #sbSpkMonthlyChart svg{display:block;width:100%;height:100%;overflow:visible;}
+  .spk-grid-line{stroke:#edf0f6;stroke-width:1;}
+  .spk-axis-label{fill:#9aa3b5;font-size:9px;font-family:Arial,Helvetica,sans-serif;}
+  .spk-area{fill:url(#spkAreaGradient);}
+  .spk-line{
+    fill:none;
+    stroke:#7654f6;
+    stroke-width:3.2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    filter:drop-shadow(0 3px 4px rgba(118,84,246,.18));
+  }
+  .spk-point{fill:#fff;stroke:#7654f6;stroke-width:2.6;transition:r .15s ease,stroke-width .15s ease;}
+  .spk-point-hit{fill:transparent;cursor:pointer;}
+  .spk-point-group:hover .spk-point{r:5.5;stroke-width:3.2;}
+  .sb-spk-tooltip{
+    position:absolute;
+    z-index:4;
+    pointer-events:none;
+    opacity:0;
+    transform:translate(-50%,-110%);
+    transition:opacity .12s ease;
+    background:#20263a;
+    color:#fff;
+    border-radius:8px;
+    padding:7px 9px;
+    box-shadow:0 8px 20px rgba(16,24,40,.18);
+    font-size:10.5px;
+    line-height:1.35;
+    white-space:nowrap;
+  }
+  .sb-spk-tooltip.show{opacity:1;}
+  .sb-spk-tooltip b{display:block;font-size:11px;margin-bottom:1px;}
+  .sb-spk-empty{
+    height:100%;min-height:190px;display:flex;align-items:center;justify-content:center;
+    text-align:center;color:var(--text-dim);font-size:11.5px;padding:20px;
+  }
+
+  /* KPI cards stay directly below Total Bangun and use the full page width. */
+  #kpi{margin-top:0;}
+
+  @media (max-width:1050px){
+    .scorecard-bangun{grid-template-columns:1fr;min-height:0;}
+    .scorecard-bangun > .sb-divider-v{width:auto;height:1px;}
+    .sb-spk-chart-wrap{min-height:230px;}
+  }
+  @media (max-width:700px){
+    .sb-summary-top{grid-template-columns:1fr;}
+    .sb-summary-bottom{grid-template-columns:1fr;}
+    .sb-spk-trend{padding:14px 12px 10px;}
+  }
+
 </style>
 
 <style id="hidden-menu-overrides">
@@ -799,56 +946,75 @@
         <button class="reset-btn" id="btnReset">Reset</button>
       </div>
 
-      <!-- ===== Scorecard: Total Bangun / SP3K / Ready Stock ===== -->
+      <!-- ===== Scorecard: Total Bangun / Done Bangun / SP3K Trend ===== -->
       <div class="scorecard-bangun" id="scorecardBangun">
-        <div class="sb-left">
-          <div class="sb-icon">
-            <svg viewBox="0 0 24 24"><path d="M12 2 2 9.5V22h6.5v-7h7v7H22V9.5L12 2z"/></svg>
-          </div>
-          <div class="sb-left-body">
-            <div class="sb-label">Total Bangun</div>
-            <div class="sb-value"><span id="sbTotalBangun">0</span><span class="unit">unit</span></div>
-            <div class="sb-subrow">
-              <div class="sb-sub">
-                <div class="sb-sub-num" id="sbSp3kCount">0<sup id="sbSp3kPct">/0%</sup></div>
-                <div class="sb-sub-label">SP3K</div>
+        <div class="sb-summary-content">
+          <div class="sb-summary-top">
+            <div class="sb-left">
+              <div class="sb-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2 2 9.5V22h6.5v-7h7v7H22V9.5L12 2z"/></svg>
               </div>
-              <div class="sb-sub">
-                <div class="sb-sub-num" id="sbReadyCount">0<sup id="sbReadyPct">/0%</sup></div>
-                <div class="sb-sub-label">Ready Stock</div>
+              <div class="sb-left-body">
+                <div class="sb-label">Total Bangun</div>
+                <div class="sb-value"><span id="sbTotalBangun">0</span><span class="unit">unit</span></div>
+                <div class="sb-subrow">
+                  <div class="sb-sub">
+                    <div class="sb-sub-num" id="sbSp3kCount">0<sup id="sbSp3kPct">/0%</sup></div>
+                    <div class="sb-sub-label">SP3K</div>
+                  </div>
+                  <div class="sb-sub">
+                    <div class="sb-sub-num" id="sbReadyCount">0<sup id="sbReadyPct">/0%</sup></div>
+                    <div class="sb-sub-label">Ready Stock</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sb-done" aria-label="Done Bangun">
+              <div class="sb-done-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg>
+              </div>
+              <div class="sb-done-body">
+                <div class="sb-done-label">Done Bangun</div>
+                <div class="sb-done-value"><b id="sbDoneBangun">0</b><span>unit</span></div>
+                <div class="sb-done-pct"><b id="sbDoneBangunPct">0%</b><span>dari total bangun</span></div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="sb-done" aria-label="Done Bangun">
-          <div class="sb-done-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg>
-          </div>
-          <div class="sb-done-body">
-            <div class="sb-done-label">Done Bangun</div>
-            <div class="sb-done-value"><b id="sbDoneBangun">0</b><span>unit</span></div>
-            <div class="sb-done-pct"><b id="sbDoneBangunPct">0%</b><span>dari total bangun</span></div>
+          <div class="sb-summary-bottom">
+            <div class="sb-right-row">
+              <div class="sb-right-label">Total SP3K Muncul</div>
+              <div class="sb-right-nums">
+                <span class="sb-right-num" id="sbSp3kMuncul">0</span>
+                <span class="sb-right-sep"></span>
+                <div class="sb-right-pct"><b id="sbSp3kMunculPct">0%</b><span>yang dibangun</span></div>
+              </div>
+            </div>
+            <div class="sb-right-row">
+              <div class="sb-right-label">Total Ready Stock Muncul</div>
+              <div class="sb-right-nums">
+                <span class="sb-right-num" id="sbReadyMuncul">0</span>
+                <span class="sb-right-sep"></span>
+                <div class="sb-right-pct"><b id="sbReadyMunculPct">0%</b><span>yang dibangun</span></div>
+              </div>
+            </div>
           </div>
         </div>
 
         <div class="sb-divider-v"></div>
-        <div class="sb-right">
-          <div class="sb-right-row">
-            <div class="sb-right-label">Total SP3K Muncul</div>
-            <div class="sb-right-nums">
-              <span class="sb-right-num" id="sbSp3kMuncul">0</span>
-              <span class="sb-right-sep"></span>
-              <div class="sb-right-pct"><b id="sbSp3kMunculPct">0%</b><span>yang dibangun</span></div>
+
+        <div class="sb-spk-trend" aria-label="Tren SPK Awal per bulan">
+          <div class="sb-spk-trend-head">
+            <div>
+              <div class="sb-spk-trend-title">SPK Awal per Bulan</div>
+              <div class="sb-spk-trend-sub">Jumlah data berdasarkan bulan pada tanggal SPK Awal</div>
             </div>
+            <span class="sb-spk-trend-badge" id="sbSpkTrendTotal">0 data</span>
           </div>
-          <div class="sb-right-row">
-            <div class="sb-right-label">Total Ready Stock Muncul</div>
-            <div class="sb-right-nums">
-              <span class="sb-right-num" id="sbReadyMuncul">0</span>
-              <span class="sb-right-sep"></span>
-              <div class="sb-right-pct"><b id="sbReadyMunculPct">0%</b><span>yang dibangun</span></div>
-            </div>
+          <div class="sb-spk-chart-wrap" id="sbSpkChartWrap">
+            <div id="sbSpkMonthlyChart"></div>
+            <div class="sb-spk-tooltip" id="sbSpkTooltip"></div>
           </div>
         </div>
       </div>
@@ -1670,6 +1836,8 @@ function deriveFields(list){
     // Kolom waktu aktual untuk scorecard Time Summary. Kosong tetap null agar
     // tidak ikut memengaruhi average/min/max.
     p.actTime = parseDurationNumber(p.actTime);
+    // Tanggal SPK Awal untuk mini chart bulanan pada Project Summary.
+    p.spkAwal = (p.spkAwal || "").toString().trim();
     // Data halaman Manpower.
     p.tukangType = (p.tukangType || "").toString().trim();
     p.prodW1 = parseNullableNumber(p.prodW1);
@@ -1720,6 +1888,7 @@ async function loadData(){
         "act time","act_time","acttime","actual time","actual_time","actualtime",
         "actual days","actual duration","duration actual","waktu aktual","lama aktual"
       ], null)),
+      spkAwal: rowValue(row,["spk awal","spk_awal","spkawal","tanggal spk awal","tgl spk awal","spk date"], "").toString().trim(),
       tukangType: rowValue(row,["tukang","jenis tukang","tipe tukang","type tukang"], "").toString().trim(),
       prodW1: parseNullableNumber(rowValue(row,["prod w1","prodw1","productivity w1","produktivitas w1"], null)),
       prodW2: parseNullableNumber(rowValue(row,["prod w2","prodw2","productivity w2","produktivitas w2"], null)),
@@ -1839,6 +2008,158 @@ function formatDate(d){
   return dt.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"});
 }
 
+
+/* ===== Mini Chart SPK Awal per Bulan ===== */
+function parseSpkDate(value){
+  if(value === null || value === undefined) return null;
+  const raw = String(value).trim();
+  if(!raw) return null;
+
+  // Google Sheets / Excel serial date.
+  if(/^\d+(?:\.\d+)?$/.test(raw)){
+    const serial = Number(raw);
+    if(serial > 20000 && serial < 100000){
+      const ms = Date.UTC(1899,11,30) + Math.floor(serial) * 86400000;
+      const d = new Date(ms);
+      if(!Number.isNaN(d.getTime())) return d;
+    }
+  }
+
+  let m;
+  // dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy
+  m = raw.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})(?:\s.*)?$/);
+  if(m){
+    let y = Number(m[3]);
+    if(y < 100) y += 2000;
+    const d = new Date(Date.UTC(y, Number(m[2])-1, Number(m[1])));
+    if(d.getUTCFullYear()===y && d.getUTCMonth()===Number(m[2])-1 && d.getUTCDate()===Number(m[1])) return d;
+  }
+
+  // yyyy-mm-dd / yyyy/mm/dd
+  m = raw.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})(?:\s.*)?$/);
+  if(m){
+    const d = new Date(Date.UTC(Number(m[1]), Number(m[2])-1, Number(m[3])));
+    if(!Number.isNaN(d.getTime())) return d;
+  }
+
+  const fallback = new Date(raw);
+  return Number.isNaN(fallback.getTime()) ? null : fallback;
+}
+
+function spkMonthLabel(year, monthIndex){
+  const d = new Date(Date.UTC(year, monthIndex, 1));
+  return d.toLocaleDateString("id-ID", {month:"short", year:"2-digit", timeZone:"UTC"}).replace('.', '');
+}
+
+function niceChartMax(v){
+  const n = Math.max(1, Number(v) || 1);
+  if(n <= 5) return Math.ceil(n);
+  if(n <= 20) return Math.ceil(n / 5) * 5;
+  if(n <= 50) return Math.ceil(n / 10) * 10;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(n)) - 1);
+  return Math.ceil(n / magnitude) * magnitude;
+}
+
+function renderSpkMonthlyChart(data){
+  const host = document.getElementById("sbSpkMonthlyChart");
+  const badge = document.getElementById("sbSpkTrendTotal");
+  const tooltip = document.getElementById("sbSpkTooltip");
+  if(!host || !badge || !tooltip) return;
+
+  const monthMap = new Map();
+  let validCount = 0;
+  data.forEach(p=>{
+    const d = parseSpkDate(p.spkAwal);
+    if(!d) return;
+    validCount++;
+    const y = d.getUTCFullYear ? d.getUTCFullYear() : d.getFullYear();
+    const m = d.getUTCMonth ? d.getUTCMonth() : d.getMonth();
+    const key = `${y}-${String(m+1).padStart(2,"0")}`;
+    if(!monthMap.has(key)) monthMap.set(key,{key,year:y,month:m,count:0});
+    monthMap.get(key).count++;
+  });
+
+  badge.textContent = `${validCount} data`;
+  tooltip.classList.remove("show");
+
+  const rows = [...monthMap.values()].sort((a,b)=>a.key.localeCompare(b.key));
+  if(!rows.length){
+    host.innerHTML = '<div class="sb-spk-empty">Belum ada tanggal <b style="margin:0 3px;">SPK Awal</b> yang dapat divisualisasikan pada filter ini.</div>';
+    return;
+  }
+
+  const W = 520, H = 200;
+  const pad = {l:32,r:12,t:16,b:30};
+  const plotW = W-pad.l-pad.r, plotH = H-pad.t-pad.b;
+  const maxVal = Math.max(...rows.map(r=>r.count));
+  const yMax = niceChartMax(maxVal);
+  const xAt = i => rows.length===1 ? pad.l + plotW/2 : pad.l + (i/(rows.length-1))*plotW;
+  const yAt = v => pad.t + plotH - (v/yMax)*plotH;
+
+  const points = rows.map((r,i)=>({x:xAt(i),y:yAt(r.count),...r}));
+  let linePath = '';
+  if(points.length===1){
+    linePath = `M ${points[0].x-1} ${points[0].y} L ${points[0].x+1} ${points[0].y}`;
+  }else{
+    linePath = points.map((p,i)=>`${i?'L':'M'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ');
+  }
+  const areaPath = `${linePath} L ${points[points.length-1].x.toFixed(2)} ${(pad.t+plotH).toFixed(2)} L ${points[0].x.toFixed(2)} ${(pad.t+plotH).toFixed(2)} Z`;
+
+  const grid = [0,.25,.5,.75,1].map(fr=>{
+    const value = Math.round(yMax*(1-fr));
+    const y = pad.t + plotH*fr;
+    return `<line class="spk-grid-line" x1="${pad.l}" y1="${y}" x2="${W-pad.r}" y2="${y}"/><text class="spk-axis-label" x="${pad.l-7}" y="${y+3}" text-anchor="end">${value}</text>`;
+  }).join('');
+
+  const labelEvery = Math.max(1, Math.ceil(rows.length/6));
+  const xLabels = points.map((p,i)=>{
+    if(i % labelEvery !== 0 && i !== points.length-1) return '';
+    return `<text class="spk-axis-label" x="${p.x}" y="${H-8}" text-anchor="middle">${spkMonthLabel(p.year,p.month)}</text>`;
+  }).join('');
+
+  const circles = points.map((p,i)=>`
+    <g class="spk-point-group" data-spk-index="${i}">
+      <circle class="spk-point" cx="${p.x}" cy="${p.y}" r="4"/>
+      <circle class="spk-point-hit" data-spk-point="${i}" cx="${p.x}" cy="${p.y}" r="13"/>
+    </g>`).join('');
+
+  host.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Tren jumlah SPK Awal per bulan">
+      <defs>
+        <linearGradient id="spkAreaGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#7654f6" stop-opacity=".22"/>
+          <stop offset="100%" stop-color="#7654f6" stop-opacity=".01"/>
+        </linearGradient>
+      </defs>
+      ${grid}
+      <path class="spk-area" d="${areaPath}"/>
+      <path class="spk-line" d="${linePath}"/>
+      ${circles}
+      ${xLabels}
+    </svg>`;
+
+  const wrap = document.getElementById('sbSpkChartWrap');
+  host.querySelectorAll('[data-spk-point]').forEach(el=>{
+    const idx = Number(el.dataset.spkPoint);
+    const p = points[idx];
+    const showTip = () => {
+      const svg = host.querySelector('svg');
+      if(!svg || !wrap) return;
+      const svgRect = svg.getBoundingClientRect();
+      const wrapRect = wrap.getBoundingClientRect();
+      const left = (p.x/W)*svgRect.width + (svgRect.left-wrapRect.left);
+      const top = (p.y/H)*svgRect.height + (svgRect.top-wrapRect.top);
+      tooltip.innerHTML = `<b>${spkMonthLabel(p.year,p.month)}</b>${p.count} SPK Awal`;
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top}px`;
+      tooltip.classList.add('show');
+    };
+    el.addEventListener('mouseenter', showTip);
+    el.addEventListener('mousemove', showTip);
+    el.addEventListener('mouseleave', ()=>tooltip.classList.remove('show'));
+  });
+}
+
 /* =====================================================================
    SCORECARD TOTAL BANGUN — logika perhitungan
    1. Total Bangun          = jumlah baris proyek yang lolos filter (COUNTA)
@@ -1915,6 +2236,9 @@ function renderScorecardBangun(data){
   document.getElementById("sbSp3kMunculPct").textContent = Math.round(pctSp3kMuncul) + "%";
   document.getElementById("sbReadyMuncul").textContent = bankReadyMuncul;
   document.getElementById("sbReadyMunculPct").textContent = Math.round(pctReadyMuncul) + "%";
+
+  // Mini chart mengikuti filter Region + PIC yang sama karena memakai `data`.
+  renderSpkMonthlyChart(data);
 }
 
 
