@@ -3164,7 +3164,7 @@ function renderQualityScorecard(data){
 
   document.getElementById("qualityBottomDetail").textContent = bottomActualRows.length
     ? bottomActualRows
-        .map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatAfs(p.afs, true)} | Tukang: ${tukangLabel(p)}`)
+        .map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatAfs(p.afs, true)}`)
         .join("\n")
     : "Tidak ada proyek selesai dengan AFS > 0";
 
@@ -3273,11 +3273,11 @@ function renderTimeScorecard(data){
   document.getElementById("timeBottomValue").textContent = Number.isFinite(maxTime) ? formatDays(maxTime, true) : "—";
 
   document.getElementById("timeTopDetail").textContent = topRows.length
-    ? topRows.map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatDays(p.actTime, true)} | Tukang: ${tukangLabel(p)}`).join("\n")
+    ? topRows.map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatDays(p.actTime, true)}`).join("\n")
     : "Tidak ada data act time proyek selesai";
 
   document.getElementById("timeBottomDetail").textContent = bottomRows.length
-    ? bottomRows.map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatDays(p.actTime, true)} | Tukang: ${tukangLabel(p)}`).join("\n")
+    ? bottomRows.map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatDays(p.actTime, true)}`).join("\n")
     : "Tidak ada data act time proyek selesai";
 
   setTextSafe("timeTopTukang", `Tukang: ${tukangLabels(topRows)}`);
