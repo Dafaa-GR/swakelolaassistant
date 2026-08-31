@@ -3755,69 +3755,79 @@ function renderManpowerProductivityChart(weekArrays){
 }
 
 function renderManpower(){
-  const page=document.getElementById("pageManpower"); if(!page) return;
-  const data=getFilteredManpower();
+  const page=document.getElementById("pageManpower");
+  if(!page) return;
 
-  // 1) Orang Harian: COUNTA dari CSV employee header "tukang aktif".
-  const daily=MANPOWER_EMPLOYEES.length;
+  const setText=(id,value)=>{ const el=document.getElementById(id); if(el) el.textContent=value; };
 
-  // 2) Borongan: hitung baris proyek dengan tukang = Full Borongan / Hybrid.
-  // Filter Region & PIC berlaku karena sumbernya adalah `data`.
-  const borongan=data.filter(x=>isBoronganProject(x.tukangType)).length;
+  let data=[];
+  try{
+    data=getFilteredManpower();
+  }catch(err){
+    console.warn("Filter manpower gagal, memakai seluruh data proyek.",err);
+    data=Array.isArray(PROJECTS)?PROJECTS:[];
+  }
+
+  // Orang Harian berasal dari CSV employee khusus header `tukang aktif` dan tidak difilter project.
+  const daily=Array.isArray(MANPOWER_EMPLOYEES) ? MANPOWER_EMPLOYEES.length : 0;
+  // Borongan tetap mengikuti filter Region & PIC.
+  const borongan=data.filter(x=>isBoronganProject(x && x.tukangType)).length;
   const ratio=borongan>0 ? (daily/borongan)*100 : null;
 
-  document.getElementById("mpDaily").textContent=daily.toLocaleString("id-ID");
-  document.getElementById("mpContract").textContent=borongan.toLocaleString("id-ID");
-  document.getElementById("mpDailyVsContractPct").textContent=ratio===null?"—":formatPct(ratio,1);
+  setText("mpDaily",daily.toLocaleString("id-ID"));
+  setText("mpContract",borongan.toLocaleString("id-ID"));
+  setText("mpDailyVsContractPct",ratio===null?"—":formatPct(ratio,1));
 
-  // 3) Produktivitas: hanya proyek On Progress, tetap mengikuti filter Region/PIC.
-  const onProgress=data.filter(x=>x.stageNorm==="on progress");
-  const w1=onProgress.map(x=>x.prodW1).filter(Number.isFinite);
-  const w2=onProgress.map(x=>x.prodW2).filter(Number.isFinite);
-  const w3=onProgress.map(x=>x.prodW3).filter(Number.isFinite);
-  const w4=onProgress.map(x=>x.prodW4).filter(Number.isFinite);
+  // Produktivitas hanya dari proyek Status = On Progress dan angka valid prod w1-w4.
+  const onProgress=data.filter(x=>x && x.stageNorm==="on progress");
+  const numeric=v=>Number.isFinite(v);
+  const w1=onProgress.map(x=>x.prodW1).filter(numeric);
+  const w2=onProgress.map(x=>x.prodW2).filter(numeric);
+  const w3=onProgress.map(x=>x.prodW3).filter(numeric);
+  const w4=onProgress.map(x=>x.prodW4).filter(numeric);
   const all=[...w1,...w2,...w3,...w4];
   const overall=avgFinite(all);
 
-  setProductivityWeek(1,w1);
-  setProductivityWeek(2,w2);
-  setProductivityWeek(3,w3);
-  setProductivityWeek(4,w4);
+  try{ setProductivityWeek(1,w1); }catch(e){ console.warn("Prod W1 gagal dirender",e); }
+  try{ setProductivityWeek(2,w2); }catch(e){ console.warn("Prod W2 gagal dirender",e); }
+  try{ setProductivityWeek(3,w3); }catch(e){ console.warn("Prod W3 gagal dirender",e); }
+  try{ setProductivityWeek(4,w4); }catch(e){ console.warn("Prod W4 gagal dirender",e); }
 
-  const v=document.getElementById("mpProductivity"), d=document.getElementById("mpProductivityDial"), ring=document.getElementById("mpProductivityRing"), foot=document.getElementById("mpProductivityFoot");
+  const v=document.getElementById("mpProductivity");
+  const d=document.getElementById("mpProductivityDial");
+  const ring=document.getElementById("mpProductivityRing");
+  const foot=document.getElementById("mpProductivityFoot");
   const achEl=document.getElementById("mpProductivityAchievement");
   const achCard=document.getElementById("mpProductivityAchievementCard");
+
   if(overall===null){
-    v.textContent="—";
-    d.textContent="—";
-    ring.style.setProperty("--pct",0);
+    if(v) v.textContent="—";
+    if(d) d.textContent="—";
+    if(ring) ring.style.setProperty("--pct",0);
     if(achEl) achEl.textContent="—";
     if(achCard) achCard.classList.remove("achieved","below");
-    foot.textContent=`${onProgress.length} proyek On Progress · belum ada angka valid pada prod w1–w4.`;
+    if(foot) foot.textContent=`${onProgress.length} proyek On Progress · belum ada angka valid pada prod w1–w4.`;
   }else{
-    const achievement = MANPOWER_PRODUCTIVITY_TARGET > 0 ? (overall / MANPOWER_PRODUCTIVITY_TARGET) * 100 : 0;
-    v.textContent=formatPct(overall,2);
-    d.textContent=Math.round(achievement)+"%";
-    ring.style.setProperty("--pct",Math.max(0,Math.min(achievement,100)));
+    const achievement=MANPOWER_PRODUCTIVITY_TARGET>0 ? (overall/MANPOWER_PRODUCTIVITY_TARGET)*100 : 0;
+    if(v) v.textContent=formatPct(overall,2);
+    if(d) d.textContent=Math.round(achievement)+"%";
+    if(ring) ring.style.setProperty("--pct",Math.max(0,Math.min(achievement,100)));
     if(achEl) achEl.textContent=formatPct(achievement,1);
     if(achCard){
-      achCard.classList.toggle("achieved", achievement>=100);
-      achCard.classList.toggle("below", achievement<100);
+      achCard.classList.toggle("achieved",achievement>=100);
+      achCard.classList.toggle("below",achievement<100);
     }
-    const statusText = achievement>=100 ? "target tercapai" : "belum mencapai target";
-    foot.textContent=`Average ${all.length} data produktivitas valid dari ${onProgress.length} proyek On Progress · ${statusText}.`;
+    const statusText=achievement>=100?"target tercapai":"belum mencapai target";
+    if(foot) foot.textContent=`Average ${all.length} data produktivitas valid dari ${onProgress.length} proyek On Progress · ${statusText}.`;
   }
 
-  // Daftar tukang aktif sengaja tidak menerima filter Region/PIC.
-  // Render terlebih dahulu supaya kegagalan visualisasi chart tidak pernah
-  // menghilangkan angka produktivitas maupun daftar tukang aktif.
-  renderActiveWorkerList();
+  // Daftar tukang aktif diproses terpisah agar error visual/chart tidak memblokir nama.
+  try{ renderActiveWorkerList(); }
+  catch(err){ console.warn("Daftar tukang aktif gagal dirender.",err); }
 
-  // Chart dibuat self-contained (SVG), tanpa bergantung pada Chart.js/CDN.
-  // Ini menjaga scorecard tetap berfungsi walaupun library chart eksternal gagal dimuat.
-  try{
-    renderManpowerProductivityChart([w1,w2,w3,w4]);
-  }catch(err){
+  // Chart SVG dipanggil paling akhir; kegagalannya tidak boleh menghapus angka scorecard.
+  try{ renderManpowerProductivityChart([w1,w2,w3,w4]); }
+  catch(err){
     console.warn("Gagal merender chart produktivitas manpower.",err);
     const empty=document.getElementById("mpProductivityChartEmpty");
     if(empty){
@@ -3826,7 +3836,6 @@ function renderManpower(){
     }
   }
 }
-
 const renderManpowerDebounced = debounce(()=>{
   if(currentPage === "manpower") renderManpower();
 }, 90);
@@ -4149,11 +4158,28 @@ async function switchPage(page){
     render();
   }else if(page === "manpower"){
     setSyncInfo(PERF_STATE.manpowerLoaded ? "Data manpower siap" : "Memuat data manpower...");
-    await Promise.all([ensureProjectData(false), ensureManpowerEmployeeData(false)]);
-    populateManpowerFilters();
-    // Tunggu satu frame setelah halaman terlihat supaya SVG memperoleh ukuran final.
+
+    // Project CSV dan CSV tukang aktif diload independen.
+    // Jadi bila satu sumber lambat/gagal, produktivitas dan daftar nama tidak saling memblokir.
+    try{
+      await ensureProjectData(false);
+      populateManpowerFilters();
+      await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
+      renderManpower();
+    }catch(e){
+      console.warn("Data proyek untuk halaman manpower gagal disiapkan.",e);
+    }
+
+    try{
+      await ensureManpowerEmployeeData(false);
+      renderManpower();
+    }catch(e){
+      console.warn("CSV tukang aktif gagal disiapkan.",e);
+      try{ renderManpower(); }catch(_){}
+    }
+
     await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
-    renderManpower();
+    try{ renderManpower(); }catch(e){ console.warn("Render akhir manpower gagal.",e); }
     setSyncInfo("Data manpower siap · " + new Date().toLocaleTimeString("id-ID"));
   }else if(page === "employees"){
     setSyncInfo(PERF_STATE.employeesLoaded ? "Data karyawan siap" : "Memuat data karyawan...");
@@ -4185,7 +4211,9 @@ document.getElementById("btnSync").addEventListener("click", async ()=>{
       await bootEmployees(true);
       setSyncInfo("Data karyawan disinkronkan · " + new Date().toLocaleTimeString("id-ID"));
     }else if(currentPage === "manpower"){
-      await Promise.all([ensureProjectData(true), ensureManpowerEmployeeData(true)]);
+      const results=await Promise.allSettled([ensureProjectData(true), ensureManpowerEmployeeData(true)]);
+      if(results[0].status==="rejected") console.warn("Refresh project CSV manpower gagal",results[0].reason);
+      if(results[1].status==="rejected") console.warn("Refresh employee tukang aktif gagal",results[1].reason);
       populateManpowerFilters();
       renderManpower();
       // Project filters diperbarui tanpa merender Project Summary yang sedang tersembunyi.
@@ -4215,7 +4243,7 @@ setInterval(()=>{
         populateFilters();
         render();
       }else if(currentPage === "manpower"){
-        await Promise.all([ensureProjectData(true), ensureManpowerEmployeeData(true)]);
+        await Promise.allSettled([ensureProjectData(true), ensureManpowerEmployeeData(true)]);
         populateManpowerFilters();
         renderManpower();
       }else if(currentPage === "employees"){
@@ -4227,8 +4255,12 @@ setInterval(()=>{
   });
 }, AUTO_REFRESH_MS);
 
-// Initial boot hanya memuat halaman Project Summary. Halaman lain lazy-load saat dibuka.
+// Initial boot tetap memprioritaskan Project Summary.
 boot();
+// CSV tukang aktif dipreload hanya saat browser idle; tidak merender Manpower di background.
+runWhenIdle(()=>{
+  ensureManpowerEmployeeData(false).catch(e=>console.warn("Preload tukang aktif dilewati",e));
+});
 </script>
 </body>
 </html>
