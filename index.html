@@ -2045,6 +2045,53 @@ function parseNullableNumber(value){
   return Number.isFinite(n) ? n : null;
 }
 
+// Parser khusus produktivitas Manpower. Dibuat lebih toleran daripada parser angka umum
+// karena sumber prod W1-W4 dapat berisi angka, persen, koma desimal, atau teks "tidak ada".
+function parseProductivityNumber(value){
+  if(value === null || value === undefined) return null;
+  if(typeof value === "number") return Number.isFinite(value) ? value : null;
+  let raw=String(value).trim();
+  if(!raw) return null;
+  const low=raw.toLowerCase().replace(/\s+/g," ").trim();
+  if(["tidak ada","tidakada","-","–","—","n/a","na","#n/a","kosong","null","none"].includes(low)) return null;
+
+  // Ambil angka pertama sehingga format seperti "2,50 %", "2.50%", atau "2,50 persen" tetap terbaca.
+  const cleaned=raw
+    .replace(/−/g,"-")
+    .replace(/,/g,".")
+    .replace(/[^0-9.+-]/g,"");
+  if(!cleaned) return null;
+  const match=cleaned.match(/[-+]?\d+(?:\.\d+)?/);
+  if(!match) return null;
+  let n=Number(match[0]);
+  if(!Number.isFinite(n)) return null;
+  // Bila sel persen diekspor sebagai rasio mentah (contoh 0.025 untuk 2,50%),
+  // konversi ke percentage-point agar konsisten dengan target 2,50%.
+  if(!raw.includes("%") && Math.abs(n) > 0 && Math.abs(n) <= 0.1) n *= 100;
+  return n;
+}
+
+// Cari nilai productivity berdasarkan header secara defensif. Exact alias tetap menjadi prioritas,
+// lalu fallback ke header yang setelah dinormalisasi mengandung prod/productivity/produktivitas + W1-W4.
+function productivityRowValue(row, week){
+  const exact=rowValue(row,[
+    `prod w${week}`,`prodw${week}`,`prod w ${week}`,
+    `productivity w${week}`,`productivity week ${week}`,
+    `produktivitas w${week}`,`produktivitas minggu ${week}`,
+    `produktifitas w${week}`,`produktifitas minggu ${week}`
+  ], undefined);
+  if(exact !== undefined && exact !== null && String(exact).trim() !== "") return exact;
+
+  const endTokens=[`w${week}`,`week${week}`,`minggu${week}`];
+  for(const [key,val] of Object.entries(row||{})){
+    const nk=normalizeHeaderKey(key);
+    const hasProd=nk.includes("prod") || nk.includes("productivity") || nk.includes("produktivitas") || nk.includes("produktifitas");
+    const ends=endTokens.some(t=>nk.endsWith(t));
+    if(hasProd && ends) return val;
+  }
+  return null;
+}
+
 // Parser khusus durasi agar header act time tetap terbaca bila CSV berisi
 // angka murni (37), desimal (37,5), maupun teks seperti "37 hari" / "37 days".
 function parseDurationNumber(value){
@@ -2313,10 +2360,10 @@ function deriveFields(list){
     p.selisihBudget = p.selisihBudget === null || p.selisihBudget === undefined ? null : parseSignedBudgetDifference(p.selisihBudget);
     // Data halaman Manpower.
     p.tukangType = (p.tukangType || "").toString().trim();
-    p.prodW1 = parseNullableNumber(p.prodW1);
-    p.prodW2 = parseNullableNumber(p.prodW2);
-    p.prodW3 = parseNullableNumber(p.prodW3);
-    p.prodW4 = parseNullableNumber(p.prodW4);
+    p.prodW1 = parseProductivityNumber(p.prodW1);
+    p.prodW2 = parseProductivityNumber(p.prodW2);
+    p.prodW3 = parseProductivityNumber(p.prodW3);
+    p.prodW4 = parseProductivityNumber(p.prodW4);
     // Field lama tetap dipertahankan agar backward compatible bila pernah dipakai.
     p.manpowerDaily = parseNullableNumber(p.manpowerDaily);
     p.manpowerBorongan = parseNullableNumber(p.manpowerBorongan);
@@ -2365,10 +2412,10 @@ async function loadData(){
       spkAkhir: rowValue(row,["spk akhir","spk_akhir","spkakhir","tanggal spk akhir","tgl spk akhir","end spk","spk end"], "").toString().trim(),
       selisihBudget: rowValue(row,["selisih budget","selisih_budget","selisihbudget","selisih biaya","budget variance","variance budget","budget difference","budget selisih"], null),
       tukangType: rowValue(row,["tukang","jenis tukang","tipe tukang","type tukang"], "").toString().trim(),
-      prodW1: parseNullableNumber(rowValue(row,["prod w1","prodw1","productivity w1","produktivitas w1"], null)),
-      prodW2: parseNullableNumber(rowValue(row,["prod w2","prodw2","productivity w2","produktivitas w2"], null)),
-      prodW3: parseNullableNumber(rowValue(row,["prod w3","prodw3","productivity w3","produktivitas w3"], null)),
-      prodW4: parseNullableNumber(rowValue(row,["prod w4","prodw4","productivity w4","produktivitas w4"], null)),
+      prodW1: parseProductivityNumber(productivityRowValue(row,1)),
+      prodW2: parseProductivityNumber(productivityRowValue(row,2)),
+      prodW3: parseProductivityNumber(productivityRowValue(row,3)),
+      prodW4: parseProductivityNumber(productivityRowValue(row,4)),
       manpowerDaily: parseNullableNumber(rowValue(row,["orang harian","manpower harian","harian","daily manpower","daily worker","tenaga harian"], null)),
       manpowerBorongan: parseNullableNumber(rowValue(row,["borongan","manpower borongan","tenaga borongan","contract manpower","borongan manpower"], null)),
       manpowerTotal: parseNullableNumber(rowValue(row,["total manpower","manpower total","jumlah manpower","manpower","jumlah tenaga kerja"], null)),
@@ -3588,6 +3635,13 @@ function isBoronganProject(value){
   const v=normalizeTukangType(value);
   return v==="full borongan" || v==="hybrid";
 }
+function isOnProgressManpower(project){
+  if(!project) return false;
+  if(project.stageNorm === "on progress") return true;
+  const s=(project.stage||"").toString().trim().toLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ");
+  return s === "on progress" || s === "onprogress" || s === "ongoing" || s === "berjalan" ||
+         s === "sedang berjalan" || s === "proses" || s === "dalam proses" || s.startsWith("on progress ");
+}
 function avgFinite(values){
   const arr=values.filter(v=>Number.isFinite(v));
   return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
@@ -3779,12 +3833,12 @@ function renderManpower(){
   setText("mpDailyVsContractPct",ratio===null?"—":formatPct(ratio,1));
 
   // Produktivitas hanya dari proyek Status = On Progress dan angka valid prod w1-w4.
-  const onProgress=data.filter(x=>x && x.stageNorm==="on progress");
+  const onProgress=data.filter(isOnProgressManpower);
   const numeric=v=>Number.isFinite(v);
-  const w1=onProgress.map(x=>x.prodW1).filter(numeric);
-  const w2=onProgress.map(x=>x.prodW2).filter(numeric);
-  const w3=onProgress.map(x=>x.prodW3).filter(numeric);
-  const w4=onProgress.map(x=>x.prodW4).filter(numeric);
+  const w1=onProgress.map(x=>parseProductivityNumber(x.prodW1)).filter(numeric);
+  const w2=onProgress.map(x=>parseProductivityNumber(x.prodW2)).filter(numeric);
+  const w3=onProgress.map(x=>parseProductivityNumber(x.prodW3)).filter(numeric);
+  const w4=onProgress.map(x=>parseProductivityNumber(x.prodW4)).filter(numeric);
   const all=[...w1,...w2,...w3,...w4];
   const overall=avgFinite(all);
 
@@ -3806,7 +3860,10 @@ function renderManpower(){
     if(ring) ring.style.setProperty("--pct",0);
     if(achEl) achEl.textContent="—";
     if(achCard) achCard.classList.remove("achieved","below");
-    if(foot) foot.textContent=`${onProgress.length} proyek On Progress · belum ada angka valid pada prod w1–w4.`;
+    if(foot){
+      const parsedCounts=[w1.length,w2.length,w3.length,w4.length].join("/");
+      foot.textContent=`${onProgress.length} proyek On Progress · belum ada angka valid pada prod w1–w4 (W1/W2/W3/W4: ${parsedCounts}).`;
+    }
   }else{
     const achievement=MANPOWER_PRODUCTIVITY_TARGET>0 ? (overall/MANPOWER_PRODUCTIVITY_TARGET)*100 : 0;
     if(v) v.textContent=formatPct(overall,2);
