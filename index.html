@@ -1116,6 +1116,8 @@
   .progress-mini-label{font-size:9.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.35px;font-weight:700;margin-bottom:3px;}
   .progress-mini-value{font-size:11.5px;font-weight:750;color:var(--text);line-height:1.3;}
   .progress-mini-value.bad{color:var(--red);}
+  .progress-mini-value.productivity{color:var(--blue);font-weight:850;}
+  .progress-productivity-note{font-size:9.5px;color:var(--text-dim);margin-top:2px;white-space:nowrap;}
   .progress-tukang-badge{
     display:inline-flex;align-items:center;max-width:100%;padding:3px 7px;border-radius:6px;
     background:var(--panel-2);border:1px solid var(--line);font-size:10px;font-weight:700;color:#596579;
@@ -1133,7 +1135,7 @@
   .progress-detail-list{display:grid;gap:7px;}
   .progress-detail-item{
     border:1px solid var(--line-soft);border-radius:9px;padding:10px 11px;background:#fff;
-    display:grid;grid-template-columns:minmax(150px,1.35fr) minmax(100px,.8fr) minmax(125px,.9fr);gap:10px;align-items:center;
+    display:grid;grid-template-columns:minmax(150px,1.35fr) minmax(90px,.72fr) minmax(105px,.78fr) minmax(115px,.82fr);gap:10px;align-items:center;
   }
   .progress-detail-panel.ontrack .progress-detail-item{border-left:3px solid #74c99d;}
   .progress-detail-panel.late .progress-detail-item{border-left:3px solid #ef766c;}
@@ -2534,6 +2536,8 @@ function deriveFields(list){
     p.prodW2 = parseProductivityNumber(p.prodW2);
     p.prodW3 = parseProductivityNumber(p.prodW3);
     p.prodW4 = parseProductivityNumber(p.prodW4);
+    // Produktivitas rata-rata per proyek untuk halaman Project Progress.
+    p.avgProd = parseProductivityNumber(p.avgProd);
     // Field lama tetap dipertahankan agar backward compatible bila pernah dipakai.
     p.manpowerDaily = parseNullableNumber(p.manpowerDaily);
     p.manpowerBorongan = parseNullableNumber(p.manpowerBorongan);
@@ -2586,6 +2590,10 @@ async function loadData(){
       prodW2: parseProductivityNumber(productivityRowValue(row,2)),
       prodW3: parseProductivityNumber(productivityRowValue(row,3)),
       prodW4: parseProductivityNumber(productivityRowValue(row,4)),
+      avgProd: parseProductivityNumber(rowValue(row,[
+        "avg prod","avg_prod","avgprod","average prod","average productivity",
+        "avg productivity","produktivitas rata rata","rata rata produktivitas","rata-rata produktivitas"
+      ], null)),
       manpowerDaily: parseNullableNumber(rowValue(row,["orang harian","manpower harian","harian","daily manpower","daily worker","tenaga harian"], null)),
       manpowerBorongan: parseNullableNumber(rowValue(row,["borongan","manpower borongan","tenaga borongan","contract manpower","borongan manpower"], null)),
       manpowerTotal: parseNullableNumber(rowValue(row,["total manpower","manpower total","jumlah manpower","manpower","jumlah tenaga kerja"], null)),
@@ -4357,6 +4365,7 @@ document.getElementById("btnEmpReset").addEventListener("click", ()=>{
    - Total Progress / On Track / Potential Late identik dengan Project Summary.
    - Proyek Prioritas sementara = subset Potential Late, deadline terdekat dahulu,
      lalu deviasi progres yang paling negatif.
+   - Detail On Track & Potential Late menampilkan Produktivitas dari header "avg prod".
 ===================================================================== */
 function populateProjectProgressFilters(){
   const regions=[...new Set(PROJECTS.map(p=>(p.region||"").trim()))].filter(Boolean).sort();
@@ -4392,6 +4401,11 @@ function ppDateText(p){
 function ppProjectTitle(p){ return `${escapeHtml(p.region || "—")} | ${escapeHtml(p.name || "—")}`; }
 function ppTukang(p){ return escapeHtml((p.tukangType || "Tidak ada data").trim() || "Tidak ada data"); }
 function ppProgressPct(p){ return Math.max(0, Math.min(100, Number(p.actual)||0)); }
+function ppAvgProdText(p){
+  const v = Number(p && p.avgProd);
+  if(!Number.isFinite(v)) return "—";
+  return `${v.toLocaleString("id-ID",{minimumFractionDigits:2,maximumFractionDigits:2})}%`;
+}
 function renderPpDetailItem(p){
   const deviation=Number.isFinite(p.deviation) ? `${p.deviation>0?"+":""}${p.deviation.toFixed(1)}%` : "—";
   return `
@@ -4408,6 +4422,11 @@ function renderPpDetailItem(p){
         <div class="progress-mini-label">Deviasi</div>
         <div class="progress-mini-value ${Number(p.deviation)<0?'bad':''}">${deviation}</div>
         <div style="margin-top:6px"><span class="progress-tukang-badge">Tukang: ${ppTukang(p)}</span></div>
+      </div>
+      <div>
+        <div class="progress-mini-label">Produktivitas</div>
+        <div class="progress-mini-value productivity">${ppAvgProdText(p)}</div>
+        <div class="progress-productivity-note">AVG Prod</div>
       </div>
       <div>
         <div class="progress-mini-label">Deadline</div>
