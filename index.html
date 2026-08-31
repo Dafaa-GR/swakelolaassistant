@@ -2026,20 +2026,50 @@ function parseSpkDate(value){
   }
 
   let m;
-  // dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy
-  m = raw.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})(?:\s.*)?$/);
+
+  // Format ISO: yyyy-mm-dd / yyyy/mm/dd
+  // Dicek lebih dulu karena format ini tidak ambigu.
+  m = raw.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})(?:\s.*)?$/);
+  if(m){
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const day = Number(m[3]);
+    const d = new Date(Date.UTC(y, mo-1, day));
+    if(d.getUTCFullYear()===y && d.getUTCMonth()===mo-1 && d.getUTCDate()===day) return d;
+  }
+
+  // FORMAT KHUSUS HEADER "spk awal": M/D/YYYY.
+  // Contoh sumber data: 7/3/2026 = 3 Juli 2026, BUKAN 7 Maret 2026.
+  m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s.*)?$/);
   if(m){
     let y = Number(m[3]);
     if(y < 100) y += 2000;
-    const d = new Date(Date.UTC(y, Number(m[2])-1, Number(m[1])));
-    if(d.getUTCFullYear()===y && d.getUTCMonth()===Number(m[2])-1 && d.getUTCDate()===Number(m[1])) return d;
+
+    const first = Number(m[1]);
+    const second = Number(m[2]);
+
+    // Prioritas Month/Day/Year sesuai format CSV SPK Awal.
+    let mo = first;
+    let day = second;
+    let d = new Date(Date.UTC(y, mo-1, day));
+    if(d.getUTCFullYear()===y && d.getUTCMonth()===mo-1 && d.getUTCDate()===day) return d;
+
+    // Fallback defensif jika ada satu-dua baris lama yang ternyata D/M/YYYY.
+    mo = second;
+    day = first;
+    d = new Date(Date.UTC(y, mo-1, day));
+    if(d.getUTCFullYear()===y && d.getUTCMonth()===mo-1 && d.getUTCDate()===day) return d;
   }
 
-  // yyyy-mm-dd / yyyy/mm/dd
-  m = raw.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})(?:\s.*)?$/);
+  // Format dengan '-' atau '.' dipertahankan sebagai D-M-YYYY / D.M.YYYY.
+  m = raw.match(/^(\d{1,2})[-.](\d{1,2})[-.](\d{2,4})(?:\s.*)?$/);
   if(m){
-    const d = new Date(Date.UTC(Number(m[1]), Number(m[2])-1, Number(m[3])));
-    if(!Number.isNaN(d.getTime())) return d;
+    let y = Number(m[3]);
+    if(y < 100) y += 2000;
+    const day = Number(m[1]);
+    const mo = Number(m[2]);
+    const d = new Date(Date.UTC(y, mo-1, day));
+    if(d.getUTCFullYear()===y && d.getUTCMonth()===mo-1 && d.getUTCDate()===day) return d;
   }
 
   const fallback = new Date(raw);
