@@ -1049,6 +1049,33 @@
   .cost-budget-diff.negative{background:var(--red-bg);border-color:#f3d2cd;color:var(--red);}
   .cost-budget-diff.zero{background:#f3f5f8;border-color:#e4e8ef;color:#667085;}
   .reduce-budget-body{grid-template-columns:minmax(0,1fr) !important;}
+
+  /* Tukang information on Top/Bottom project insights */
+  .cost-tukang-info{
+    display:inline-flex;
+    align-items:center;
+    width:max-content;
+    max-width:100%;
+    margin-top:6px;
+    padding:4px 8px;
+    border-radius:6px;
+    font-size:10.5px;
+    line-height:1.25;
+    font-weight:700;
+    color:#4f5d73;
+    background:#eef3f8;
+    border:1px solid #dce5ef;
+    white-space:normal;
+  }
+  .extreme-tukang{
+    margin-top:5px;
+    font-size:10px;
+    line-height:1.25;
+    font-weight:700;
+    color:var(--text-dim);
+    white-space:normal;
+  }
+  .quality-detail-text,.time-detail-text{white-space:pre-line;}
 </style>
 
 </head>
@@ -1269,12 +1296,14 @@
               <div class="cost-detail top">
                 <div class="cost-detail-label">Top Actual Cost</div>
                 <div class="cost-detail-text" id="costTopDetail">Tidak ada data</div>
+                <div class="cost-tukang-info" id="costTopTukang">Tukang: —</div>
                 <div class="cost-budget-diff" id="costTopDiff">Selisih Budget: —</div>
                 <div class="cost-detail-meta">Nilai budget act terendah &gt; 0</div>
               </div>
               <div class="cost-detail bottom">
                 <div class="cost-detail-label">Bottom Actual Cost</div>
                 <div class="cost-detail-text" id="costBottomDetail">Tidak ada data</div>
+                <div class="cost-tukang-info" id="costBottomTukang">Tukang: —</div>
                 <div class="cost-budget-diff" id="costBottomDiff">Selisih Budget: —</div>
                 <div class="cost-detail-meta">Nilai budget act tertinggi</div>
               </div>
@@ -1286,10 +1315,12 @@
               <div class="cost-extreme">
                 <div class="cost-extreme-label">Top <span class="down">▼</span></div>
                 <div class="cost-extreme-value" id="costTopValue">Rp0</div>
+                <div class="extreme-tukang" id="costTopExtremeTukang">Tukang: —</div>
               </div>
               <div class="cost-extreme">
                 <div class="cost-extreme-label">Bottom <span class="up">▲</span></div>
                 <div class="cost-extreme-value" id="costBottomValue">Rp0</div>
+                <div class="extreme-tukang" id="costBottomExtremeTukang">Tukang: —</div>
               </div>
             </div>
             <div class="cost-chart-wrap" id="costChartWrap">
@@ -1365,6 +1396,7 @@
               <div class="cost-detail bottom">
                 <div class="cost-detail-label">Bottom Actual AFS</div>
                 <div class="cost-detail-text quality-detail-text" id="qualityBottomDetail">Tidak ada data</div>
+                <div class="cost-tukang-info" id="qualityBottomTukang">Tukang: —</div>
                 <div class="cost-detail-meta">Proyek selesai dengan AFS &gt; 0; jika nilai tertinggi sama, semua proyek ditampilkan</div>
               </div>
             </div>
@@ -1375,10 +1407,12 @@
               <div class="cost-extreme">
                 <div class="cost-extreme-label">Top <span class="down">▼</span></div>
                 <div class="quality-extreme-value" id="qualityTopValue">—</div>
+                <div class="extreme-tukang" id="qualityTopExtremeTukang">Tukang: —</div>
               </div>
               <div class="cost-extreme">
                 <div class="cost-extreme-label">Bottom <span class="up">▲</span></div>
                 <div class="quality-extreme-value" id="qualityBottomValue">—</div>
+                <div class="extreme-tukang" id="qualityBottomExtremeTukang">Tukang: —</div>
               </div>
             </div>
 
@@ -1437,11 +1471,13 @@
               <div class="cost-detail top">
                 <div class="cost-detail-label">Top Actual Time</div>
                 <div class="cost-detail-text time-detail-text" id="timeTopDetail">Tidak ada data</div>
+                <div class="cost-tukang-info" id="timeTopTukang">Tukang: —</div>
                 <div class="cost-detail-meta">Nilai act time terendah pada proyek selesai</div>
               </div>
               <div class="cost-detail bottom">
                 <div class="cost-detail-label">Bottom Actual Time</div>
                 <div class="cost-detail-text time-detail-text" id="timeBottomDetail">Tidak ada data</div>
+                <div class="cost-tukang-info" id="timeBottomTukang">Tukang: —</div>
                 <div class="cost-detail-meta">Nilai act time tertinggi pada proyek selesai</div>
               </div>
             </div>
@@ -1452,10 +1488,12 @@
               <div class="cost-extreme">
                 <div class="cost-extreme-label">Top <span class="down">▼</span></div>
                 <div class="time-extreme-value" id="timeTopValue">—</div>
+                <div class="extreme-tukang" id="timeTopExtremeTukang">Tukang: —</div>
               </div>
               <div class="cost-extreme">
                 <div class="cost-extreme-label">Bottom <span class="up">▲</span></div>
                 <div class="time-extreme-value" id="timeBottomValue">—</div>
+                <div class="extreme-tukang" id="timeBottomExtremeTukang">Tukang: —</div>
               </div>
             </div>
 
@@ -2902,6 +2940,19 @@ function setCostBudgetDifference(elementId, row){
   el.classList.add(v>0 ? "positive" : (v<0 ? "negative" : "zero"));
 }
 
+function tukangLabel(row){
+  const value = row && row.tukangType ? row.tukangType.toString().trim() : "";
+  return value || "—";
+}
+function tukangLabels(rows){
+  const vals = [...new Set((rows || []).map(r=>tukangLabel(r)).filter(v=>v && v!=="—"))];
+  return vals.length ? vals.join(" / ") : "—";
+}
+function setTextSafe(id, text){
+  const el=document.getElementById(id);
+  if(el) el.textContent=text;
+}
+
 function renderCostScorecard(data){
   const done = data.filter(p => p.stageNorm === "selesai");
   const validTargets = done.map(p=>p.budgetTarget).filter(v=>Number.isFinite(v));
@@ -2940,6 +2991,12 @@ function renderCostScorecard(data){
   document.getElementById("costBottomDetail").textContent = bottomRow
     ? `${bottomRow.region || "Tanpa Wilayah"} | ${bottomRow.name || "Tanpa Nama"} | ${formatRupiah(bottomRow.budgetAct)}`
     : "Tidak ada budget act pada proyek selesai";
+
+  // Informasi jenis tukang diambil dari header `tukang` pada BARIS PROYEK YANG SAMA.
+  setTextSafe("costTopTukang", `Tukang: ${tukangLabel(topRow)}`);
+  setTextSafe("costBottomTukang", `Tukang: ${tukangLabel(bottomRow)}`);
+  setTextSafe("costTopExtremeTukang", `Tukang: ${tukangLabel(topRow)}`);
+  setTextSafe("costBottomExtremeTukang", `Tukang: ${tukangLabel(bottomRow)}`);
 
   // Selisih Budget diambil dari BARIS PROYEK YANG SAMA dengan Top/Bottom Actual Cost.
   // Jadi Top tetap ditentukan oleh MIN budget act > 0, Bottom oleh MAX budget act,
@@ -3065,6 +3122,12 @@ function renderQualityScorecard(data){
   const bottomRow = afsRows.length
     ? afsRows.reduce((best,p)=>p.afs > best.afs ? p : best)
     : null;
+  const qualityTopRows = topRow
+    ? afsRows.filter(p => Math.abs(p.afs - topRow.afs) < 1e-9)
+    : [];
+  const qualityBottomRows = bottomRow
+    ? afsRows.filter(p => Math.abs(p.afs - bottomRow.afs) < 1e-9)
+    : [];
 
   // Bottom Actual AFS: ambil HANYA proyek selesai dengan AFS > 0.
   // Nilai 1 AFS termasuk karena lebih besar dari target/baseline 0.
@@ -3101,9 +3164,13 @@ function renderQualityScorecard(data){
 
   document.getElementById("qualityBottomDetail").textContent = bottomActualRows.length
     ? bottomActualRows
-        .map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatAfs(p.afs, true)}`)
+        .map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatAfs(p.afs, true)} | Tukang: ${tukangLabel(p)}`)
         .join("\n")
     : "Tidak ada proyek selesai dengan AFS > 0";
+
+  setTextSafe("qualityBottomTukang", `Tukang: ${tukangLabels(bottomActualRows)}`);
+  setTextSafe("qualityTopExtremeTukang", `Tukang: ${tukangLabels(qualityTopRows)}`);
+  setTextSafe("qualityBottomExtremeTukang", `Tukang: ${tukangLabels(qualityBottomRows)}`);
 
   renderQualityChart(topRow ? topRow.afs : null, bottomRow ? bottomRow.afs : null);
 }
@@ -3206,12 +3273,17 @@ function renderTimeScorecard(data){
   document.getElementById("timeBottomValue").textContent = Number.isFinite(maxTime) ? formatDays(maxTime, true) : "—";
 
   document.getElementById("timeTopDetail").textContent = topRows.length
-    ? topRows.map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatDays(p.actTime, true)}`).join("\n")
+    ? topRows.map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatDays(p.actTime, true)} | Tukang: ${tukangLabel(p)}`).join("\n")
     : "Tidak ada data act time proyek selesai";
 
   document.getElementById("timeBottomDetail").textContent = bottomRows.length
-    ? bottomRows.map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatDays(p.actTime, true)}`).join("\n")
+    ? bottomRows.map(p => `${p.region || "Tanpa Wilayah"} | ${p.name || "Tanpa Nama"} | ${formatDays(p.actTime, true)} | Tukang: ${tukangLabel(p)}`).join("\n")
     : "Tidak ada data act time proyek selesai";
+
+  setTextSafe("timeTopTukang", `Tukang: ${tukangLabels(topRows)}`);
+  setTextSafe("timeBottomTukang", `Tukang: ${tukangLabels(bottomRows)}`);
+  setTextSafe("timeTopExtremeTukang", `Tukang: ${tukangLabels(topRows)}`);
+  setTextSafe("timeBottomExtremeTukang", `Tukang: ${tukangLabels(bottomRows)}`);
 
   renderTimeChart(minTime, maxTime);
 }
