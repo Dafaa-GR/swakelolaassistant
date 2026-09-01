@@ -672,6 +672,37 @@
   .manpower-list-scroll th:hover{color:var(--text-dim);}
   .manpower-list-scroll td:first-child,.manpower-list-scroll th:first-child{width:56px;text-align:center;}
   .manpower-list-name{font-weight:700;color:var(--text);}
+
+  /* Ranking produktivitas blok & tukang */
+  .mp-rank-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px;box-shadow:0 6px 18px rgba(26,35,51,.03);}
+  .mp-rank-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px;}
+  .mp-rank-title{font-size:12px;font-weight:800;color:#4b5567;text-transform:uppercase;letter-spacing:.5px;}
+  .mp-rank-sub{font-size:10.5px;color:var(--text-dim);margin-top:3px;line-height:1.45;}
+  .mp-rank-count{font-size:11px;font-weight:800;color:var(--blue);background:var(--blue-bg);border:1px solid #cfe3f5;border-radius:18px;padding:5px 10px;white-space:nowrap;}
+  .mp-rank-scroll{max-height:330px;overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff;}
+  .mp-rank-scroll table{font-size:12px;}
+  .mp-rank-scroll th{position:sticky;top:0;z-index:2;background:var(--panel-2);cursor:default;}
+  .mp-rank-scroll th:hover{color:var(--text-dim);}
+  .mp-rank-scroll td{padding-top:10px;padding-bottom:10px;}
+  .mp-rank-no{width:62px;text-align:center;font-weight:800;color:#667085;}
+  .mp-rank-badge{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:26px;padding:0 7px;border-radius:14px;background:#f1f4f8;border:1px solid #e2e6ee;color:#526070;font-size:11px;font-weight:800;}
+  .mp-rank-badge.top1{background:var(--green-bg);border-color:#cdeeda;color:var(--green);}
+  .mp-rank-badge.top2{background:var(--blue-bg);border-color:#cfe3f5;color:var(--blue);}
+  .mp-rank-badge.top3{background:var(--amber-bg);border-color:#f1ddb8;color:var(--amber);}
+  .mp-rank-site{font-weight:700;color:var(--text);}
+  .mp-rank-block{font-weight:800;color:var(--text);}
+  .mp-rank-tukang{display:inline-flex;align-items:center;padding:4px 8px;border-radius:14px;background:var(--panel-2);border:1px solid var(--line);font-size:10.5px;font-weight:700;color:#5d687b;white-space:nowrap;}
+  .mp-rank-prod{font-size:13px;font-weight:850;color:var(--green);white-space:nowrap;}
+  .mp-rank-empty{text-align:center;padding:28px 18px;color:var(--text-dim);font-size:12px;}
+  .mp-rank-scroll::-webkit-scrollbar{width:9px;height:9px;}
+  .mp-rank-scroll::-webkit-scrollbar-thumb{background:#c7cfdb;border-radius:9px;border:2px solid #fff;}
+  .mp-rank-scroll::-webkit-scrollbar-track{background:#f5f7fa;}
+  @media(max-width:700px){
+    .mp-rank-head{flex-direction:column;}
+    .mp-rank-scroll{max-height:300px;}
+    .mp-rank-scroll table{min-width:620px;}
+  }
+
   .manpower-list-scroll::-webkit-scrollbar{width:9px;height:9px;}
   .manpower-list-scroll::-webkit-scrollbar-thumb{background:#c7cfdb;border-radius:9px;border:2px solid #fff;}
   .manpower-list-scroll::-webkit-scrollbar-track{background:#f5f7fa;}
@@ -1932,6 +1963,31 @@
           <div id="mpProductivityChart" class="mp-svg-chart" role="img" aria-label="Tren Produktivitas Manpower W1 sampai W4"></div>
           <div id="mpProductivityChartTooltip" class="mp-chart-tooltip" aria-hidden="true"></div>
           <div class="manpower-chart-empty" id="mpProductivityChartEmpty">Belum ada data produktivitas numerik pada proyek On Progress.</div>
+        </div>
+      </div>
+
+      <div class="mp-rank-card" id="mpProductivityRankCard">
+        <div class="mp-rank-head">
+          <div>
+            <div class="mp-rank-title">Ranking Produktivitas Blok &amp; Tukang</div>
+            <div class="mp-rank-sub">Mengurutkan header “avg prod” dari nilai tertinggi ke terendah. Data mengikuti filter Wilayah dan PIC pada halaman Manpower.</div>
+          </div>
+          <div class="mp-rank-count" id="mpProductivityRankCount">0 proyek</div>
+        </div>
+        <div class="mp-rank-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align:center;">Rank</th>
+                <th>Site</th>
+                <th>Blok</th>
+                <th>Tukang</th>
+                <th>AVG Prod</th>
+              </tr>
+            </thead>
+            <tbody id="mpProductivityRankBody"></tbody>
+          </table>
+          <div class="mp-rank-empty" id="mpProductivityRankEmpty" style="display:none;">Belum ada angka valid pada header “avg prod”.</div>
         </div>
       </div>
 
@@ -4001,6 +4057,58 @@ function renderManpowerProductivityChart(weekArrays){
   });
 }
 
+function renderManpowerProductivityRanking(data){
+  const body=document.getElementById("mpProductivityRankBody");
+  const empty=document.getElementById("mpProductivityRankEmpty");
+  const count=document.getElementById("mpProductivityRankCount");
+  if(!body || !empty || !count) return;
+
+  // Requirement ranking Manpower:
+  // - name   -> Blok
+  // - region -> Site
+  // - tukang -> Jenis tukang
+  // - avg prod -> nilai produktivitas untuk ranking
+  // Tidak menambahkan filter Status; ranking mengambil seluruh baris proyek dengan
+  // avg prod numerik yang lolos filter Wilayah/PIC halaman Manpower.
+  const rows=(Array.isArray(data)?data:[])
+    .filter(p=>Number.isFinite(Number(p && p.avgProd)))
+    .map(p=>({
+      name:(p.name||"Tanpa Nama").toString().trim()||"Tanpa Nama",
+      region:(p.region||"Tanpa Wilayah").toString().trim()||"Tanpa Wilayah",
+      tukang:(p.tukangType||p.tukang||"—").toString().trim()||"—",
+      avgProd:Number(p.avgProd)
+    }))
+    .sort((a,b)=>{
+      if(b.avgProd!==a.avgProd) return b.avgProd-a.avgProd;
+      const r=a.region.localeCompare(b.region,"id",{sensitivity:"base"});
+      if(r!==0) return r;
+      return a.name.localeCompare(b.name,"id",{sensitivity:"base"});
+    });
+
+  count.textContent=`${rows.length.toLocaleString("id-ID")} proyek`;
+  body.innerHTML="";
+  empty.style.display=rows.length?"none":"block";
+  if(!rows.length) return;
+
+  // Competition rank: nilai avg prod yang sama mendapatkan rank yang sama.
+  let previousValue=null;
+  let currentRank=0;
+  body.innerHTML=rows.map((row,index)=>{
+    if(previousValue===null || Math.abs(row.avgProd-previousValue)>1e-9){
+      currentRank=index+1;
+      previousValue=row.avgProd;
+    }
+    const badgeClass=currentRank===1?"top1":currentRank===2?"top2":currentRank===3?"top3":"";
+    return `<tr>
+      <td class="mp-rank-no"><span class="mp-rank-badge ${badgeClass}">${currentRank}</span></td>
+      <td><span class="mp-rank-site">${escapeHtml(row.region)}</span></td>
+      <td><span class="mp-rank-block">${escapeHtml(row.name)}</span></td>
+      <td><span class="mp-rank-tukang">${escapeHtml(row.tukang)}</span></td>
+      <td><span class="mp-rank-prod">${formatPct(row.avgProd,2)}</span></td>
+    </tr>`;
+  }).join("");
+}
+
 function renderManpower(){
   const page=document.getElementById("pageManpower");
   if(!page) return;
@@ -4024,6 +4132,10 @@ function renderManpower(){
   setText("mpDaily",daily.toLocaleString("id-ID"));
   setText("mpContract",borongan.toLocaleString("id-ID"));
   setText("mpDailyVsContractPct",ratio===null?"—":formatPct(ratio,1));
+
+  // Ranking Avg Prod mengikuti filter Wilayah & PIC aktif, tetapi tidak memerlukan Status tertentu.
+  try{ renderManpowerProductivityRanking(data); }
+  catch(err){ console.warn("Ranking produktivitas blok & tukang gagal dirender.",err); }
 
   // Produktivitas hanya dari proyek Status = On Progress dan angka valid prod w1-w4.
   const onProgress=data.filter(isOnProgressManpower);
