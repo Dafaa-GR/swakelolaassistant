@@ -675,6 +675,31 @@
 
   /* Ranking produktivitas blok & tukang */
   .mp-rank-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px;box-shadow:0 6px 18px rgba(26,35,51,.03);}
+  .mp-rank-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,.9fr);gap:16px;align-items:stretch;}
+  .mp-rank-table-side{min-width:0;}
+  .mp-podium-card{border:1px solid var(--line);border-radius:10px;background:linear-gradient(180deg,#fbfcfe 0%,#f6f8fb 100%);padding:14px 14px 12px;display:flex;flex-direction:column;min-height:330px;overflow:hidden;}
+  .mp-podium-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .mp-podium-title{font-size:11px;font-weight:800;color:#4b5567;text-transform:uppercase;letter-spacing:.45px;}
+  .mp-podium-sub{font-size:10px;color:var(--text-dim);margin-top:3px;line-height:1.4;}
+  .mp-podium-badge{font-size:9.5px;font-weight:800;color:var(--green);background:var(--green-bg);border:1px solid #cdeeda;border-radius:16px;padding:4px 8px;white-space:nowrap;}
+  .mp-podium-stage{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:10px 4px 0;min-height:245px;}
+  .mp-podium-slot{flex:1;max-width:118px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0;}
+  .mp-podium-person{width:100%;text-align:center;margin-bottom:7px;min-height:72px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;}
+  .mp-podium-rank{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;margin-bottom:5px;border:1px solid var(--line);background:#fff;color:#667085;box-shadow:0 3px 8px rgba(26,35,51,.05);}
+  .mp-podium-slot.rank-1 .mp-podium-rank{background:var(--green-bg);border-color:#cdeeda;color:var(--green);}
+  .mp-podium-slot.rank-2 .mp-podium-rank{background:var(--blue-bg);border-color:#cfe3f5;color:var(--blue);}
+  .mp-podium-slot.rank-3 .mp-podium-rank{background:var(--amber-bg);border-color:#f1ddb8;color:var(--amber);}
+  .mp-podium-name{font-size:10.5px;font-weight:800;color:var(--text);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mp-podium-site{font-size:9px;color:var(--text-dim);margin-top:2px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mp-podium-tukang{font-size:9px;font-weight:700;color:#5d687b;background:#fff;border:1px solid var(--line);border-radius:12px;padding:3px 6px;margin-top:4px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mp-podium-value{font-size:11.5px;font-weight:900;color:var(--green);margin-top:4px;}
+  .mp-podium-block{width:100%;border-radius:8px 8px 3px 3px;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font-size:22px;font-weight:900;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.22);}
+  .mp-podium-slot.rank-1 .mp-podium-block{height:132px;background:linear-gradient(180deg,#45b879,#1f9d63);}
+  .mp-podium-slot.rank-2 .mp-podium-block{height:98px;background:linear-gradient(180deg,#66aee0,#2f7fc4);}
+  .mp-podium-slot.rank-3 .mp-podium-block{height:72px;background:linear-gradient(180deg,#efb75e,#d98e21);}
+  .mp-podium-empty{margin:auto;text-align:center;color:var(--text-dim);font-size:11px;line-height:1.5;padding:24px 10px;}
+  @media(max-width:980px){.mp-rank-layout{grid-template-columns:1fr;}.mp-podium-card{min-height:310px;}.mp-podium-stage{min-height:225px;}}
+
   .mp-rank-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px;}
   .mp-rank-title{font-size:12px;font-weight:800;color:#4b5567;text-transform:uppercase;letter-spacing:.5px;}
   .mp-rank-sub{font-size:10.5px;color:var(--text-dim);margin-top:3px;line-height:1.45;}
@@ -701,6 +726,10 @@
     .mp-rank-head{flex-direction:column;}
     .mp-rank-scroll{max-height:300px;}
     .mp-rank-scroll table{min-width:620px;}
+    .mp-podium-card{padding:12px 10px;}
+    .mp-podium-stage{gap:5px;padding-left:0;padding-right:0;}
+    .mp-podium-name{font-size:9.5px;}
+    .mp-podium-site,.mp-podium-tukang{font-size:8.5px;}
   }
 
   .manpower-list-scroll::-webkit-scrollbar{width:9px;height:9px;}
@@ -1970,24 +1999,38 @@
         <div class="mp-rank-head">
           <div>
             <div class="mp-rank-title">Ranking Produktivitas Blok &amp; Tukang</div>
-            <div class="mp-rank-sub">Mengurutkan header “avg prod” dari nilai tertinggi ke terendah. Data mengikuti filter Wilayah dan PIC pada halaman Manpower.</div>
+            <div class="mp-rank-sub">Hanya proyek Status = Selesai. Mengurutkan header “avg prod” dari nilai tertinggi ke terendah dan mengikuti filter Wilayah/PIC.</div>
           </div>
-          <div class="mp-rank-count" id="mpProductivityRankCount">0 proyek</div>
+          <div class="mp-rank-count" id="mpProductivityRankCount">0 proyek selesai</div>
         </div>
-        <div class="mp-rank-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th style="text-align:center;">Rank</th>
-                <th>Site</th>
-                <th>Blok</th>
-                <th>Tukang</th>
-                <th>AVG Prod</th>
-              </tr>
-            </thead>
-            <tbody id="mpProductivityRankBody"></tbody>
-          </table>
-          <div class="mp-rank-empty" id="mpProductivityRankEmpty" style="display:none;">Belum ada angka valid pada header “avg prod”.</div>
+        <div class="mp-rank-layout">
+          <div class="mp-rank-table-side">
+            <div class="mp-rank-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="text-align:center;">Rank</th>
+                    <th>Site</th>
+                    <th>Blok</th>
+                    <th>Tukang</th>
+                    <th>AVG Prod</th>
+                  </tr>
+                </thead>
+                <tbody id="mpProductivityRankBody"></tbody>
+              </table>
+              <div class="mp-rank-empty" id="mpProductivityRankEmpty" style="display:none;">Belum ada proyek selesai dengan angka valid pada header “avg prod”.</div>
+            </div>
+          </div>
+          <div class="mp-podium-card" id="mpProductivityPodiumCard">
+            <div class="mp-podium-head">
+              <div>
+                <div class="mp-podium-title">Podium Produktivitas</div>
+                <div class="mp-podium-sub">3 blok dengan AVG Prod tertinggi dari proyek selesai.</div>
+              </div>
+              <div class="mp-podium-badge">TOP 3</div>
+            </div>
+            <div class="mp-podium-stage" id="mpProductivityPodium"></div>
+          </div>
         </div>
       </div>
 
@@ -4061,16 +4104,12 @@ function renderManpowerProductivityRanking(data){
   const body=document.getElementById("mpProductivityRankBody");
   const empty=document.getElementById("mpProductivityRankEmpty");
   const count=document.getElementById("mpProductivityRankCount");
+  const podium=document.getElementById("mpProductivityPodium");
   if(!body || !empty || !count) return;
 
-  // Requirement ranking Manpower:
-  // - name   -> Blok
-  // - region -> Site
-  // - tukang -> Jenis tukang
-  // - avg prod -> nilai produktivitas untuk ranking
-  // Tidak menambahkan filter Status; ranking mengambil seluruh baris proyek dengan
-  // avg prod numerik yang lolos filter Wilayah/PIC halaman Manpower.
+  // Ranking hanya proyek yang sudah selesai dan lolos filter Wilayah/PIC Manpower.
   const rows=(Array.isArray(data)?data:[])
+    .filter(p=>normalizeStageValue(p && (p.stageNorm || p.stage))==="selesai")
     .filter(p=>Number.isFinite(Number(p && p.avgProd)))
     .map(p=>({
       name:(p.name||"Tanpa Nama").toString().trim()||"Tanpa Nama",
@@ -4085,28 +4124,55 @@ function renderManpowerProductivityRanking(data){
       return a.name.localeCompare(b.name,"id",{sensitivity:"base"});
     });
 
-  count.textContent=`${rows.length.toLocaleString("id-ID")} proyek`;
+  count.textContent=`${rows.length.toLocaleString("id-ID")} proyek selesai`;
   body.innerHTML="";
   empty.style.display=rows.length?"none":"block";
-  if(!rows.length) return;
 
-  // Competition rank: nilai avg prod yang sama mendapatkan rank yang sama.
+  if(!rows.length){
+    if(podium) podium.innerHTML='<div class="mp-podium-empty">Belum ada proyek selesai dengan data <b>AVG Prod</b> numerik.</div>';
+    return;
+  }
+
+  // Competition rank: nilai yang sama mendapatkan rank yang sama.
   let previousValue=null;
   let currentRank=0;
-  body.innerHTML=rows.map((row,index)=>{
+  const rankedRows=rows.map((row,index)=>{
     if(previousValue===null || Math.abs(row.avgProd-previousValue)>1e-9){
       currentRank=index+1;
       previousValue=row.avgProd;
     }
-    const badgeClass=currentRank===1?"top1":currentRank===2?"top2":currentRank===3?"top3":"";
+    return {...row,rank:currentRank};
+  });
+
+  body.innerHTML=rankedRows.map(row=>{
+    const badgeClass=row.rank===1?"top1":row.rank===2?"top2":row.rank===3?"top3":"";
     return `<tr>
-      <td class="mp-rank-no"><span class="mp-rank-badge ${badgeClass}">${currentRank}</span></td>
+      <td class="mp-rank-no"><span class="mp-rank-badge ${badgeClass}">${row.rank}</span></td>
       <td><span class="mp-rank-site">${escapeHtml(row.region)}</span></td>
       <td><span class="mp-rank-block">${escapeHtml(row.name)}</span></td>
       <td><span class="mp-rank-tukang">${escapeHtml(row.tukang)}</span></td>
       <td><span class="mp-rank-prod">${formatPct(row.avgProd,2)}</span></td>
     </tr>`;
   }).join("");
+
+  if(podium){
+    // Podium mengambil 3 entry teratas setelah sorting. Urutan visual: Rank 2 | Rank 1 | Rank 3.
+    const top3=rankedRows.slice(0,3);
+    const visualOrder=[top3[1],top3[0],top3[2]].filter(Boolean);
+    podium.innerHTML=visualOrder.map((row,visualIndex)=>{
+      const place=row===top3[0]?1:(row===top3[1]?2:3);
+      return `<div class="mp-podium-slot rank-${place}" title="${escapeHtml(row.region)} | ${escapeHtml(row.name)} | ${escapeHtml(row.tukang)} | ${formatPct(row.avgProd,2)}">
+        <div class="mp-podium-person">
+          <div class="mp-podium-rank">${place}</div>
+          <div class="mp-podium-name">${escapeHtml(row.name)}</div>
+          <div class="mp-podium-site">${escapeHtml(row.region)}</div>
+          <div class="mp-podium-tukang">${escapeHtml(row.tukang)}</div>
+          <div class="mp-podium-value">${formatPct(row.avgProd,2)}</div>
+        </div>
+        <div class="mp-podium-block">${place}</div>
+      </div>`;
+    }).join("");
+  }
 }
 
 function renderManpower(){
@@ -4133,7 +4199,7 @@ function renderManpower(){
   setText("mpContract",borongan.toLocaleString("id-ID"));
   setText("mpDailyVsContractPct",ratio===null?"—":formatPct(ratio,1));
 
-  // Ranking Avg Prod mengikuti filter Wilayah & PIC aktif, tetapi tidak memerlukan Status tertentu.
+  // Ranking Avg Prod mengikuti filter Wilayah & PIC aktif dan hanya proyek Status = Selesai.
   try{ renderManpowerProductivityRanking(data); }
   catch(err){ console.warn("Ranking produktivitas blok & tukang gagal dirender.",err); }
 
