@@ -1950,7 +1950,7 @@
           <div class="manpower-card-head">
             <div>
               <div class="manpower-card-title">Produktivitas Manpower</div>
-              <div class="manpower-card-sub">Hanya proyek Status = On Progress; mengambil angka pada prod w1–w4.</div>
+              <div class="manpower-card-sub">Hanya proyek Status = On Progress; average hanya menghitung nilai prod w1–w4 yang > 0.</div>
             </div>
             <div class="manpower-icon"><svg viewBox="0 0 24 24"><path d="M4 18V9"/><path d="M10 18V5"/><path d="M16 18v-7"/><path d="M3 20h18"/><path d="m15 7 2-2 2 2"/></svg></div>
           </div>
@@ -1984,7 +1984,7 @@
         <div class="manpower-chart-head">
           <div>
             <div class="manpower-chart-title">Tren Produktivitas Manpower</div>
-            <div class="manpower-chart-sub">Average Prod W1–W4 dari proyek Status = On Progress. Chart mengikuti filter Wilayah dan PIC aktif; arahkan kursor untuk melihat detail.</div>
+            <div class="manpower-chart-sub">Average Prod W1–W4 dari proyek Status = On Progress; nilai 0, kosong, dan non-angka tidak dihitung. Chart mengikuti filter Wilayah dan PIC aktif; arahkan kursor untuk melihat detail.</div>
           </div>
           <div class="manpower-chart-target">Target 2,50%</div>
         </div>
@@ -4203,13 +4203,15 @@ function renderManpower(){
   try{ renderManpowerProductivityRanking(data); }
   catch(err){ console.warn("Ranking produktivitas blok & tukang gagal dirender.",err); }
 
-  // Produktivitas hanya dari proyek Status = On Progress dan angka valid prod w1-w4.
+  // Produktivitas hanya dari proyek Status = On Progress.
+  // Average hanya menghitung nilai numerik yang > 0. Nilai 0, kosong,
+  // "Tidak Ada" / teks non-angka, dan nilai negatif tidak ikut dihitung.
   const onProgress=data.filter(isOnProgressManpower);
-  const numeric=v=>Number.isFinite(v);
-  const w1=onProgress.map(x=>parseProductivityNumber(x.prodW1)).filter(numeric);
-  const w2=onProgress.map(x=>parseProductivityNumber(x.prodW2)).filter(numeric);
-  const w3=onProgress.map(x=>parseProductivityNumber(x.prodW3)).filter(numeric);
-  const w4=onProgress.map(x=>parseProductivityNumber(x.prodW4)).filter(numeric);
+  const positiveNumeric=v=>Number.isFinite(v) && v>0;
+  const w1=onProgress.map(x=>parseProductivityNumber(x.prodW1)).filter(positiveNumeric);
+  const w2=onProgress.map(x=>parseProductivityNumber(x.prodW2)).filter(positiveNumeric);
+  const w3=onProgress.map(x=>parseProductivityNumber(x.prodW3)).filter(positiveNumeric);
+  const w4=onProgress.map(x=>parseProductivityNumber(x.prodW4)).filter(positiveNumeric);
   const all=[...w1,...w2,...w3,...w4];
   const overall=avgFinite(all);
 
@@ -4233,7 +4235,7 @@ function renderManpower(){
     if(achCard) achCard.classList.remove("achieved","below");
     if(foot){
       const parsedCounts=[w1.length,w2.length,w3.length,w4.length].join("/");
-      foot.textContent=`${onProgress.length} proyek On Progress · belum ada angka valid pada prod w1–w4 (W1/W2/W3/W4: ${parsedCounts}).`;
+      foot.textContent=`${onProgress.length} proyek On Progress · belum ada angka produktivitas > 0 pada prod w1–w4 (W1/W2/W3/W4: ${parsedCounts}).`;
     }
   }else{
     const achievement=MANPOWER_PRODUCTIVITY_TARGET>0 ? (overall/MANPOWER_PRODUCTIVITY_TARGET)*100 : 0;
@@ -4246,7 +4248,7 @@ function renderManpower(){
       achCard.classList.toggle("below",achievement<100);
     }
     const statusText=achievement>=100?"target tercapai":"belum mencapai target";
-    if(foot) foot.textContent=`Average ${all.length} data produktivitas valid dari ${onProgress.length} proyek On Progress · ${statusText}.`;
+    if(foot) foot.textContent=`Average ${all.length} data produktivitas > 0 dari ${onProgress.length} proyek On Progress · ${statusText}.`;
   }
 
   // Daftar tukang aktif diproses terpisah agar error visual/chart tidak memblokir nama.
